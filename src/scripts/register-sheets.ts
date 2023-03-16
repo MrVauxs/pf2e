@@ -4,6 +4,7 @@ import { HazardSheetPF2e } from "@actor/hazard/sheet";
 import { LootSheetPF2e } from "@actor/loot/sheet";
 import { NPCSheetPF2e } from "@actor/npc/sheet";
 import { VehicleSheetPF2e } from "@actor/vehicle/sheet";
+import { ArmySheetPF2e } from "@actor/army/sheet";
 import { ItemSheetPF2e } from "@item";
 import { ActionSheetPF2e } from "@item/action";
 import { AfflictionSheetPF2e } from "@item/affliction";
@@ -85,6 +86,13 @@ export function registerSheets(): void {
     Actors.registerSheet("pf2e", VehicleSheetPF2e, {
         types: ["vehicle"],
         label: game.i18n.format(sheetLabel, { type: localizeType("vehicle") }),
+        makeDefault: true,
+    });
+    
+    // Register Army Sheet
+    Actors.registerSheet("pf2e", ArmySheetPF2e, {
+        types: ["army"],
+        label: game.i18n.format(sheetLabel, { type: localizeType("army") }),
         makeDefault: true,
     });
 
