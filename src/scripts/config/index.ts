@@ -1,4 +1,4 @@
-import { CharacterPF2e, FamiliarPF2e, HazardPF2e, LootPF2e, NPCPF2e, PartyPF2e, VehiclePF2e } from "@actor";
+import { CharacterPF2e, FamiliarPF2e, HazardPF2e, LootPF2e, NPCPF2e, PartyPF2e, VehiclePF2e, ArmyPF2e } from "@actor";
 import { SenseAcuity, SenseType } from "@actor/creature/sense";
 import { Alignment } from "@actor/creature/types";
 import { ActorType } from "@actor/data";
@@ -79,8 +79,9 @@ const actorTypes: Record<ActorType, string> = {
     hazard: "ACTOR.TypeHazard",
     loot: "ACTOR.TypeLoot",
     npc: "ACTOR.TypeNpc",
-    party: "Actor.TypeParty",
+    party: "ACTOR.TypeParty",
     vehicle: "ACTOR.TypeVehicle",
+    army: "ACTOR.TypeArmy",
 };
 
 // Senses
@@ -1689,6 +1690,7 @@ export const PF2ECONFIG = {
 
     Actor: {
         documentClasses: {
+            army: ArmyPF2e,
             character: CharacterPF2e,
             npc: NPCPF2e,
             hazard: HazardPF2e,

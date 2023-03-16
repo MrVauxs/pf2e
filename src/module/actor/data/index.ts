@@ -1,3 +1,4 @@
+import { ArmySource } from "@actor/army";
 import { CharacterSource } from "@actor/character/data";
 import { CreatureType } from "@actor/creature/data";
 import { FamiliarSource } from "@actor/familiar/data";
@@ -8,9 +9,9 @@ import { PartySource } from "@actor/party/data";
 import { VehicleSource } from "@actor/vehicle/data";
 
 type CreatureSource = CharacterSource | NPCSource | FamiliarSource;
-type ActorType = CreatureType | "hazard" | "loot" | "party" | "vehicle";
+type ActorType = CreatureType | "army" | "hazard" | "loot" | "party" | "vehicle";
 
-type ActorSourcePF2e = CreatureSource | HazardSource | LootSource | PartySource | VehicleSource;
+type ActorSourcePF2e = CreatureSource | ArmySource | HazardSource | LootSource | PartySource | VehicleSource;
 
 interface RollInitiativeOptionsPF2e extends RollInitiativeOptions {
     secret?: boolean;
@@ -19,6 +20,7 @@ interface RollInitiativeOptionsPF2e extends RollInitiativeOptions {
 export {
     ActorSourcePF2e,
     ActorType,
+    ArmySource,
     CharacterSource,
     CreatureSource,
     FamiliarSource,

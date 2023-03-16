@@ -8,7 +8,8 @@
         "TypeLoot": "Loot",
         "TypeNpc": "NPC",
         "TypeParty": "Party",
-        "TypeVehicle": "Vehicle"
+        "TypeVehicle": "Vehicle",
+        "TypeArmy": "Army"
     },
     "COMBAT": {
         "Begin": "Begin Encounter",

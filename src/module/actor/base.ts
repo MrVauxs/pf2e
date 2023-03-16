@@ -438,7 +438,7 @@ class ActorPF2e extends Actor<TokenDocumentPF2e, ItemTypeMap> {
     ): Promise<ClientDocument<foundry.documents.BaseActor> | undefined> {
         const original = game.system.documentTypes.Actor;
         game.system.documentTypes.Actor = original.filter(
-            (actorType: string) => actorType !== "party" || BUILD_MODE !== "production"
+            (actorType: string) => !["army", "party"].includes(actorType) || BUILD_MODE !== "production"
         );
         const newActor = super.createDialog(data, options) as Promise<ActorPF2e | undefined>;
         game.system.documentTypes.Actor = original;
