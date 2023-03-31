@@ -69,6 +69,7 @@ import {
     spellTraits,
     vehicleTraits,
     weaponTraits,
+    armyTraits
 } from "./traits";
 
 export type StatusEffectIconTheme = "default" | "blackWhite";
@@ -1093,6 +1094,7 @@ export const PF2ECONFIG = {
     monsterTraits: creatureTraits,
     npcAttackTraits,
     hazardTraits,
+    armyTraits,
     vehicleTraits,
 
     traitsDescriptions,

@@ -733,6 +733,13 @@ const hazardTraits = {
     visual: "PF2E.TraitVisual",
 };
 
+const armyTraits = {
+    infantry: "PF2E.TraitInfantry",
+    cavalry: "PF2E.TraitCavalry",
+    skirmisher: "PF2E.TraitSkirmisher",
+    siege: "PF2E.TraitSiege",
+};
+
 const vehicleTraits = {
     ...magicSchools,
     artifact: "PF2E.TraitArtifact",
@@ -894,4 +901,5 @@ export {
     spellTraits,
     vehicleTraits,
     weaponTraits,
+    armyTraits,
 };
