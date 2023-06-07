@@ -96,9 +96,6 @@ $light-text: #f5efe0;
         }
 
         .health-section, .shield-section {
-            .side-bar-label {
-                align-items: center;
-            }
 
             .hit-points {
                 display: flex;
@@ -277,13 +274,13 @@ $light-text: #f5efe0;
         border-color: $faded-color;
         margin-top: 10px;
         margin-bottom: 0px;
+        align-items: baseline;
 
         .side-bar-label {
             display: flex;
             flex: auto;
             flex-direction: row;
-            align-items: flex-start;
-
+            align-items: center;
             .fa {
                 font-size: 0.8rem;
             }
@@ -802,11 +799,11 @@ $light-text: #f5efe0;
     }
 
     .notes {
-        padding-right: 15px;
 
         &.active {
             display: flex;
             flex-direction: column;
+            padding-right: 15px;
         }
 
         .details-label {
@@ -817,7 +814,6 @@ $light-text: #f5efe0;
             line-height: 1;
             text-transform: uppercase;
             color: var(--primary);
-
             margin-right: 2px;
             white-space: nowrap;
         }
@@ -829,7 +825,6 @@ $light-text: #f5efe0;
         }
 
         .notes-text {
-            margin-left: 8px;
             padding: 4px;
             color: #333;
             flex-grow: 1;
@@ -842,8 +837,13 @@ $light-text: #f5efe0;
                 }
 
                 .editor-content {
+                    text-indent: 8px;
                     min-height: 75px;
                     height: 100%;
+                }
+
+                a.editor-edit {
+                    padding: 2px 2px 2px 4px;
                 }
             }
         }

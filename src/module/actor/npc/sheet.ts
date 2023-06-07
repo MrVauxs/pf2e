@@ -44,9 +44,11 @@ class NPCSheetPF2e<TActor extends NPCPF2e> extends CreatureSheetPF2e<TActor> {
     override get template(): string {
         if (this.isLootSheet) {
             return "systems/pf2e/templates/actors/npc/loot-sheet.hbs";
+        } else if (this.actor.getFlag("pf2e", "simple")) {
+            return "systems/pf2e/templates/actors/npc/simple-sheet.hbs";
         } else if (this.actor.limited) {
             return "systems/pf2e/templates/actors/limited/npc-sheet.hbs";
-        }
+        } 
         return "systems/pf2e/templates/actors/npc/sheet.hbs";
     }
 
@@ -188,6 +190,9 @@ class NPCSheetPF2e<TActor extends NPCPF2e> extends CreatureSheetPF2e<TActor> {
         // Set the inventory tab as active on a loot-sheet rendering.
         if (this.isLootSheet) {
             $html.find(".tab.inventory").addClass("active");
+        }
+        if (this.actor.getFlag("pf2e", "simple")) {
+            $html.find(".tab.notes").addClass("active");
         }
 
         // Tagify the traits selection
