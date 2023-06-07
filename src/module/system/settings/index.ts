@@ -1,14 +1,15 @@
-import { resetActors } from "@actor/helpers";
-import { ActorSheetPF2e } from "@actor/sheet/base";
+import { resetActors } from "@actor/helpers.ts";
+import { ActorSheetPF2e } from "@actor/sheet/base.ts";
 import { ItemPF2e, ItemSheetPF2e } from "@item";
-import { StatusEffects } from "@module/canvas/status-effects";
-import { MigrationRunner } from "@module/migration/runner";
+import { StatusEffects } from "@module/canvas/status-effects.ts";
+import { MigrationRunner } from "@module/migration/runner/index.ts";
 import { isImageOrVideoPath } from "@util";
-import { AutomationSettings } from "./automation";
-import { HomebrewElements } from "./homebrew";
-import { MetagameSettings } from "./metagame";
-import { VariantRulesSettings } from "./variant-rules";
-import { WorldClockSettings } from "./world-clock";
+import * as R from "remeda";
+import { AutomationSettings } from "./automation.ts";
+import { HomebrewElements } from "./homebrew/menu.ts";
+import { MetagameSettings } from "./metagame.ts";
+import { VariantRulesSettings } from "./variant-rules.ts";
+import { WorldClockSettings } from "./world-clock.ts";
 
 export function registerSettings(): void {
     if (BUILD_MODE === "development") {
@@ -64,6 +65,23 @@ export function registerSettings(): void {
         type: Object,
         scope: "world",
         onChange: () => {
+            game.pf2e.compendiumBrowser.initCompendiumList();
+        },
+    });
+
+    game.settings.register("pf2e", "compendiumBrowserSources", {
+        name: "PF2E.SETTINGS.compendiumBrowserSources.Name",
+        hint: "PF2E.SETTINGS.compendiumBrowserSources.Hint",
+        default: {
+            ignoreAsGM: true,
+            showEmptySources: true,
+            showUnknownSources: true,
+            sources: {},
+        },
+        type: Object,
+        scope: "world",
+        onChange: () => {
+            game.pf2e.compendiumBrowser.packLoader.reset();
             game.pf2e.compendiumBrowser.initCompendiumList();
         },
     });
@@ -135,14 +153,28 @@ export function registerSettings(): void {
     });
 
     game.settings.register("pf2e", "deathIcon", {
-        name: "PF2E.Settings.DeathIcon.Name",
-        hint: "PF2E.Settings.DeathIcon.Hint",
+        name: "PF2E.SETTINGS.DeathIcon.Name",
+        hint: "PF2E.SETTINGS.DeathIcon.Hint",
         scope: "world",
         config: false,
         default: "icons/svg/skull.svg",
         type: String,
         onChange: (choice?: string) => {
             if (isImageOrVideoPath(choice)) CONFIG.controlIcons.defeated = choice;
+        },
+    });
+
+    game.settings.register("pf2e", "dataTools", {
+        name: "PF2E.SETTINGS.DataTools.Name",
+        hint: "PF2E.SETTINGS.DataTools.Hint",
+        scope: "world",
+        config: false,
+        default: BUILD_MODE === "development",
+        type: Boolean,
+        onChange: () => {
+            for (const app of Object.values(ui.windows).filter((a) => a instanceof DocumentSheet)) {
+                app.render();
+            }
         },
     });
 
@@ -230,9 +262,23 @@ export function registerSettings(): void {
     });
     WorldClockSettings.registerSettings();
 
+    game.settings.register("pf2e", "campaignType", {
+        name: "PF2E.SETTINGS.CampaignType.Name",
+        hint: "PF2E.SETTINGS.CampaignType.Hint",
+        scope: "world",
+        config: false, // 🤫
+        default: "none",
+        choices: R.mapToObj(["none", "kingmaker"], (key) => [key, `PF2E.SETTINGS.CampaignType.Choices.${key}`]),
+        type: String,
+        onChange: async () => {
+            await resetActors(game.actors.filter((a) => a.isOfType("party")));
+            ui.sidebar.render();
+        },
+    });
+
     game.settings.register("pf2e", "campaignFeats", {
-        name: CONFIG.PF2E.SETTINGS.CampaignFeats.name,
-        hint: CONFIG.PF2E.SETTINGS.CampaignFeats.hint,
+        name: "PF2E.SETTINGS.CampaignFeats.Name",
+        hint: "PF2E.SETTINGS.CampaignFeats.Hint",
         scope: "world",
         config: true,
         default: false,
@@ -284,5 +330,6 @@ function registerWorldSchemaVersion(): void {
         config: true,
         default: MigrationRunner.LATEST_SCHEMA_VERSION,
         type: Number,
+        requiresReload: true,
     });
 }

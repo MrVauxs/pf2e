@@ -1,7 +1,8 @@
 import { ActorPF2e, ActorProxyPF2e } from "@actor";
 import { ItemPF2e, MeleePF2e } from "@item";
-import { MigrationList, MigrationRunner } from "@module/migration";
-import { MigrationRunnerBase } from "@module/migration/runner/base";
+import { ZeroToTwo } from "@module/data.ts";
+import { MigrationList, MigrationRunner } from "@module/migration/index.ts";
+import { MigrationRunnerBase } from "@module/migration/runner/base.ts";
 import {
     extractDegreeOfSuccessAdjustments,
     extractModifierAdjustments,
@@ -9,23 +10,22 @@ import {
     extractNotes,
     extractRollSubstitutions,
     extractRollTwice,
-} from "@module/rules/helpers";
-import { TokenDocumentPF2e } from "@scene";
-import { CheckPF2e, CheckRoll } from "@system/check";
-import { DamagePF2e, DamageRollContext } from "@system/damage";
-import { DamageRoll } from "@system/damage/roll";
-import { WeaponDamagePF2e } from "@system/damage/weapon";
-import { AttackRollParams, DamageRollParams } from "@system/rolls";
+} from "@module/rules/helpers.ts";
+import { TokenDocumentPF2e } from "@scene/index.ts";
+import { eventToRollParams } from "@scripts/sheet-util.ts";
+import { CheckPF2e, CheckRoll } from "@system/check/index.ts";
+import { DamagePF2e, DamageRollContext } from "@system/damage/index.ts";
+import { DamageRoll } from "@system/damage/roll.ts";
+import { WeaponDamagePF2e } from "@system/damage/weapon.ts";
+import { AttackRollParams, DamageRollParams } from "@system/rolls.ts";
 import { ErrorPF2e, getActionGlyph, getActionIcon, sluggify } from "@util";
-import { ActorSourcePF2e } from "./data";
-import { DamageRollFunction, TraitViewData } from "./data/base";
-import { CheckModifier, ModifierPF2e, MODIFIER_TYPE, StatisticModifier } from "./modifiers";
-import { NPCStrike } from "./npc/data";
-import { StrikeAttackTraits } from "./npc/strike-attack-traits";
-import { AttackItem } from "./types";
-import { ANIMAL_COMPANION_SOURCE_ID, CONSTRUCT_COMPANION_SOURCE_ID } from "./values";
-import { eventToRollParams } from "@scripts/sheet-util";
-import { ZeroToTwo } from "@module/data";
+import { StrikeAttackTraits } from "./creature/helpers.ts";
+import { DamageRollFunction, TraitViewData } from "./data/base.ts";
+import { ActorSourcePF2e } from "./data/index.ts";
+import { CheckModifier, ModifierPF2e, StatisticModifier } from "./modifiers.ts";
+import { NPCStrike } from "./npc/data.ts";
+import { AttackItem } from "./types.ts";
+import { ANIMAL_COMPANION_SOURCE_IDS, CONSTRUCT_COMPANION_SOURCE_IDS } from "./values.ts";
 
 /** Reset and rerender a provided list of actors. Omit argument to reset all world and synthetic actors */
 async function resetActors(actors?: Iterable<ActorPF2e>, { rerender = true } = {}): Promise<void> {
@@ -147,7 +147,7 @@ function calculateMAPs(
 }
 
 /** Create a strike statistic from a melee item: for use by NPCs and Hazards */
-function strikeFromMeleeItem(item: Embedded<MeleePF2e>): NPCStrike {
+function strikeFromMeleeItem(item: MeleePF2e<ActorPF2e>): NPCStrike {
     const { ability, isMelee, isThrown } = item;
     const { actor } = item;
     if (!actor.isOfType("npc", "hazard")) {
@@ -160,14 +160,13 @@ function strikeFromMeleeItem(item: Embedded<MeleePF2e>): NPCStrike {
     const meleeOrRanged = isMelee ? "melee" : "ranged";
 
     const domains = [
-        "attack",
-        "mundane-attack",
         `${slug}-attack`,
         `${item.id}-attack`,
         `${unarmedOrWeapon}-attack-roll`,
         `${meleeOrRanged}-attack-roll`,
         "strike-attack-roll",
         "attack-roll",
+        "attack",
         "all",
     ];
 
@@ -186,12 +185,13 @@ function strikeFromMeleeItem(item: Embedded<MeleePF2e>): NPCStrike {
     ];
 
     modifiers.push(...extractModifiers(synthetics, domains));
-    modifiers.push(...StrikeAttackTraits.createAttackModifiers(item));
+    modifiers.push(...StrikeAttackTraits.createAttackModifiers({ weapon: item }));
     const notes = extractNotes(synthetics.rollNotes, domains);
 
     const attackEffects: Record<string, string | undefined> = CONFIG.PF2E.attackEffects;
     const additionalEffects = item.attackEffects.map((tag) => {
-        const label = attackEffects[tag] ?? actor.items.find((i) => (i.slug ?? sluggify(i.name)) === tag)?.name ?? tag;
+        const items: ItemPF2e<ActorPF2e>[] = actor.items.contents;
+        const label = attackEffects[tag] ?? items.find((i) => (i.slug ?? sluggify(i.name)) === tag)?.name ?? tag;
         return { tag, label };
     });
 
@@ -254,8 +254,8 @@ function strikeFromMeleeItem(item: Embedded<MeleePF2e>): NPCStrike {
 
     strike.variants = [
         null,
-        new ModifierPF2e("PF2E.MultipleAttackPenalty", multipleAttackPenalty.map1, MODIFIER_TYPE.UNTYPED),
-        new ModifierPF2e("PF2E.MultipleAttackPenalty", multipleAttackPenalty.map2, MODIFIER_TYPE.UNTYPED),
+        new ModifierPF2e("PF2E.MultipleAttackPenalty", multipleAttackPenalty.map1, "untyped"),
+        new ModifierPF2e("PF2E.MultipleAttackPenalty", multipleAttackPenalty.map2, "untyped"),
     ].map((map, mapIncreases) => {
         const label = map
             ? game.i18n.format("PF2E.MAPAbbreviationLabel", { penalty: map.modifier })
@@ -268,9 +268,12 @@ function strikeFromMeleeItem(item: Embedded<MeleePF2e>): NPCStrike {
 
                 params.options ??= [];
                 // Always add all weapon traits as options
-                const context = await actor.getAttackRollContext({
+                const context = await actor.getCheckContext({
                     item,
-                    viewOnly: false,
+                    viewOnly: params.getFormula ?? false,
+                    statistic: strike,
+                    target: { token: game.user.targets.first() ?? null },
+                    targetedDC: "armor",
                     domains,
                     options: new Set([...baseOptions, ...params.options]),
                 });
@@ -291,10 +294,11 @@ function strikeFromMeleeItem(item: Embedded<MeleePF2e>): NPCStrike {
                 );
 
                 const roll = await CheckPF2e.roll(
-                    new CheckModifier(checkName, strike, otherModifiers),
+                    new CheckModifier(checkName, context.self.statistic ?? strike, otherModifiers),
                     {
                         type: "attack-roll",
                         actor: context.self.actor,
+                        token: context.self.token,
                         item: context.self.item,
                         target: context.target,
                         domains,
@@ -328,12 +332,14 @@ function strikeFromMeleeItem(item: Embedded<MeleePF2e>): NPCStrike {
     const damageRoll =
         (outcome: "success" | "criticalSuccess"): DamageRollFunction =>
         async (params: DamageRollParams = {}): Promise<Rolled<DamageRoll> | string | null> => {
-            const domains = ["all", `{item.id}-damage`, "strike-damage", "damage-roll"];
-            const context = await actor.getStrikeRollContext({
+            const domains = ["all", `${item.id}-damage`, "strike-damage", "damage-roll"];
+            const context = await actor.getRollContext({
                 item,
-                viewOnly: false,
+                statistic: strike,
+                target: { token: game.user.targets.first() ?? null },
+                viewOnly: params.getFormula ?? false,
                 domains,
-                options: new Set(params.options ?? []),
+                options: new Set([...baseOptions, ...(params.options ?? [])]),
             });
 
             if (!context.self.item.dealsDamage && !params.getFormula) {
@@ -430,7 +436,7 @@ function calculateRangePenalty(
     const modifier = new ModifierPF2e({
         label: "PF2E.RangePenalty",
         slug,
-        type: MODIFIER_TYPE.UNTYPED,
+        type: "untyped",
         modifier: Math.max((increment - 1) * -2, -12), // Max range penalty before automatic failure
         predicate: [{ nor: ["ignore-range-penalty", { gte: ["ignore-range-penalty", increment] }] }],
         adjustments: extractModifierAdjustments(actor.synthetics.modifierAdjustments, selectors, slug),
@@ -444,7 +450,7 @@ function isReallyPC(actor: ActorPF2e): boolean {
     if (!actor.isOfType("character")) return false;
     const classItemSourceID = actor.class?.sourceId;
     return !(
-        [ANIMAL_COMPANION_SOURCE_ID, CONSTRUCT_COMPANION_SOURCE_ID].includes(classItemSourceID ?? "") ||
+        [...ANIMAL_COMPANION_SOURCE_IDS, ...CONSTRUCT_COMPANION_SOURCE_IDS].includes(classItemSourceID ?? "") ||
         actor.traits.has("eidolon")
     );
 }

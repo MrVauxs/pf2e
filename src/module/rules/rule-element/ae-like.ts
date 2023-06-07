@@ -1,15 +1,10 @@
-import { SKILL_EXPANDED, SKILL_LONG_FORMS } from "@actor/values";
+import { ActorPF2e } from "@actor/base.ts";
+import { SKILL_EXPANDED, SKILL_LONG_FORMS } from "@actor/values.ts";
 import { FeatPF2e, ItemPF2e } from "@item";
 import { isObject, objectHasKey } from "@util";
-import { ModelPropsFromSchema, StringField } from "types/foundry/common/data/fields.mjs";
-import {
-    RuleElementPF2e,
-    RuleElementSource,
-    RuleElementData,
-    RuleElementOptions,
-    RuleValue,
-    RuleElementSchema,
-} from "./";
+import type { ModelPropsFromSchema, StringField } from "types/foundry/common/data/fields.d.ts";
+import { RuleElementOptions, RuleElementPF2e, RuleElementSchema, RuleElementSource } from "./index.ts";
+import { ResolvableValueField } from "./data.ts";
 
 const { fields } = foundry.data;
 
@@ -18,7 +13,7 @@ const { fields } = foundry.data;
  * @category RuleElement
  */
 class AELikeRuleElement<TSchema extends AELikeSchema> extends RuleElementPF2e<TSchema> {
-    constructor(data: AELikeSource, item: Embedded<ItemPF2e>, options?: RuleElementOptions) {
+    constructor(data: AELikeSource, item: ItemPF2e<ActorPF2e>, options?: RuleElementOptions) {
         const hasExplicitPriority = typeof data.priority === "number";
         super(data, item, options);
 
@@ -34,6 +29,7 @@ class AELikeRuleElement<TSchema extends AELikeSchema> extends RuleElementPF2e<TS
             mode: new fields.StringField({
                 required: true,
                 choices: Object.keys(this.CHANGE_MODES) as AELikeChangeMode[],
+                initial: undefined,
             }),
             path: new fields.StringField({ required: true, nullable: false, blank: false, initial: undefined }),
             phase: new fields.StringField({
@@ -42,6 +38,7 @@ class AELikeRuleElement<TSchema extends AELikeSchema> extends RuleElementPF2e<TS
                 choices: deepClone(this.PHASES),
                 initial: "applyAEs",
             }),
+            value: new ResolvableValueField({ required: true, nullable: true, initial: undefined }),
         };
     }
 
@@ -68,14 +65,6 @@ class AELikeRuleElement<TSchema extends AELikeSchema> extends RuleElementPF2e<TS
     })();
 
     protected validateData(): void {
-        if (!objectHasKey(AELikeRuleElement.CHANGE_MODES, this.data.mode)) {
-            return this.warn("mode");
-        }
-
-        if (Number.isNaN(this.data.priority)) {
-            return this.warn("priority");
-        }
-
         const actor = this.item.actor;
         const pathIsValid =
             typeof this.path === "string" &&
@@ -84,13 +73,6 @@ class AELikeRuleElement<TSchema extends AELikeSchema> extends RuleElementPF2e<TS
                 (path) => typeof getProperty(actor, path) !== undefined
             );
         if (!pathIsValid) return this.warn("path");
-
-        const valueIsValid = ["number", "string", "boolean", "object"].includes(typeof this.value);
-        if (!valueIsValid) this.warn("value");
-    }
-
-    get value(): RuleValue {
-        return this.data.value;
     }
 
     /** Apply the modifications immediately after proper ActiveEffects are applied */
@@ -239,15 +221,13 @@ class AELikeRuleElement<TSchema extends AELikeSchema> extends RuleElementPF2e<TS
     }
 
     protected warn(property: string): void {
-        this.failValidation(`"${property}" property is missing or invalid`);
+        this.failValidation(`"${property}" property is invalid`);
     }
 }
 
 interface AELikeRuleElement<TSchema extends AELikeSchema>
     extends RuleElementPF2e<TSchema>,
-        ModelPropsFromSchema<AELikeSchema> {
-    data: AELikeData;
-}
+        ModelPropsFromSchema<AELikeSchema> {}
 
 interface AutoChangeEntry {
     source: string;
@@ -260,18 +240,11 @@ type AELikeSchema = RuleElementSchema & {
     mode: StringField<AELikeChangeMode, AELikeChangeMode, true, false, false>;
     path: StringField<string, string, true, false, false>;
     phase: StringField<AELikeDataPrepPhase, AELikeDataPrepPhase, false, false, true>;
+    value: ResolvableValueField<true, boolean, boolean>;
 };
 
 type AELikeChangeMode = keyof (typeof AELikeRuleElement)["CHANGE_MODES"];
 type AELikeDataPrepPhase = (typeof AELikeRuleElement)["PHASES"][number];
-
-interface AELikeData extends RuleElementData {
-    path: string;
-    value: RuleValue;
-    mode: AELikeChangeMode;
-    priority: number;
-    phase: AELikeDataPrepPhase;
-}
 
 interface AELikeSource extends RuleElementSource {
     mode?: unknown;
@@ -279,4 +252,4 @@ interface AELikeSource extends RuleElementSource {
     phase?: unknown;
 }
 
-export { AELikeChangeMode, AELikeData, AELikeRuleElement, AELikeSchema, AELikeSource, AutoChangeEntry };
+export { AELikeChangeMode, AELikeRuleElement, AELikeSchema, AELikeSource, AutoChangeEntry };

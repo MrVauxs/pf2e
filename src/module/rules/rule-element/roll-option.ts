@@ -1,17 +1,17 @@
+import { ActorPF2e } from "@actor";
 import { ItemPF2e } from "@item";
-import { PredicateField } from "@system/schema-data-fields";
+import { PredicateField } from "@system/schema-data-fields.ts";
 import { ErrorPF2e, isObject } from "@util";
-import {
+import type {
     ArrayField,
     BooleanField,
     ModelPropsFromSchema,
     SchemaField,
     StringField,
-} from "types/foundry/common/data/fields.mjs";
-import { RuleElementOptions, RuleElementPF2e, RuleElementSchema, RuleElementSource } from ".";
-import { RollOptionToggle } from "../synthetics";
-
-const { fields } = foundry.data;
+} from "types/foundry/common/data/fields.d.ts";
+import { RuleElementOptions, RuleElementPF2e, RuleElementSchema, RuleElementSource } from "./index.ts";
+import { RollOptionToggle } from "../synthetics.ts";
+import { ResolvableValueField } from "./data.ts";
 
 /**
  * Set a roll option at a specificed domain
@@ -19,25 +19,21 @@ const { fields } = foundry.data;
  */
 class RollOptionRuleElement extends RuleElementPF2e<RollOptionSchema> {
     /**
-     * The value of the roll option: either a boolean or a string resolves to a boolean
-     * If omitted, it defaults to `true` unless also `togglable`, in which case to `false`.
-     */
-    private value: string | boolean;
-
-    /**
      * Whether this roll option can be toggled by the user on an actor sheet: "totm" indicates it will only be present
      * if the Theather of the Mind Toggles setting is enabled
      */
     toggleable: boolean | "totm";
 
-    constructor(source: RollOptionSource, item: Embedded<ItemPF2e>, options?: RuleElementOptions) {
+    constructor(source: RollOptionSource, item: ItemPF2e<ActorPF2e>, options?: RuleElementOptions) {
+        const sourceValue = source.value;
+
         // This rule element behaves much like an override AE-like, so set its default priority to 50
         super({ priority: CONST.ACTIVE_EFFECT_MODES.OVERRIDE * 10, ...source }, item, options);
 
         this.toggleable = source.toggleable === "totm" ? "totm" : !!source.toggleable;
-        this.value = typeof source.value === "string" ? source.value : !!(source.value ?? !this.toggleable);
+        this.value = typeof sourceValue === "string" ? sourceValue : !!(source.value ?? !this.toggleable);
 
-        if ("value" in source && !["boolean", "string"].includes(typeof source.value)) {
+        if (!["boolean", "string", "undefined"].includes(typeof sourceValue)) {
             this.failValidation('The "value" property must be a boolean, string, or otherwise omitted.');
         }
 
@@ -62,6 +58,8 @@ class RollOptionRuleElement extends RuleElementPF2e<RollOptionSchema> {
     }
 
     static override defineSchema(): RollOptionSchema {
+        const { fields } = foundry.data;
+
         return {
             ...super.defineSchema(),
             scope: new fields.StringField({
@@ -102,6 +100,7 @@ class RollOptionRuleElement extends RuleElementPF2e<RollOptionSchema> {
                     validationError: "must have zero or 2+ suboptions",
                 }
             ),
+            value: new ResolvableValueField({ required: false, nullable: false, initial: undefined }),
             disabledIf: new PredicateField({ required: false, nullable: false, initial: undefined }),
             disabledValue: new fields.BooleanField({ required: false, nullable: false, initial: undefined }),
             count: new fields.BooleanField({ required: false, nullable: false, initial: undefined }),
@@ -109,8 +108,8 @@ class RollOptionRuleElement extends RuleElementPF2e<RollOptionSchema> {
         };
     }
 
-    protected override _validateModel(source: SourceFromSchema<RollOptionSchema>): void {
-        super._validateModel(source);
+    static override validateJoint(source: SourceFromSchema<RollOptionSchema>): void {
+        super.validateJoint(source);
 
         const toggleable = "toggleable" in source ? !!source.toggleable : false;
 
@@ -127,9 +126,9 @@ class RollOptionRuleElement extends RuleElementPF2e<RollOptionSchema> {
         }
 
         if (typeof source.disabledValue === "boolean" && (!toggleable || !source.disabledIf)) {
-            this.failValidation(
-                'The "disabledValue" property may only be included if "toggeable" is true and',
-                'there is a "disabledIf" predicate.'
+            throw Error(
+                'The "disabledValue" property may only be included if "toggeable" is true and there is a ' +
+                    '"disabledIf" predicate.'
             );
         }
     }
@@ -180,12 +179,10 @@ class RollOptionRuleElement extends RuleElementPF2e<RollOptionSchema> {
             const value = this.resolveValue();
             if (value) domainRecord[option] = value;
 
-            const label = this.label.includes(":") ? this.label.replace(/^[^:]+:\s*|\s*\([^)]+\)$/g, "") : this.label;
-
             if (this.toggleable) {
                 const toggle: RollOptionToggle = {
                     itemId: this.item.id,
-                    label,
+                    label: this.getReducedLabel(),
                     scope: this.scope,
                     domain: this.domain,
                     option,
@@ -207,7 +204,7 @@ class RollOptionRuleElement extends RuleElementPF2e<RollOptionSchema> {
     }
 
     /** Force false totm toggleable roll options if the totmToggles setting is disabled */
-    override resolveValue(): boolean {
+    protected override resolveValue(): boolean {
         if (this.toggleable === "totm" && !game.settings.get("pf2e", "totmToggles")) {
             return false;
         }
@@ -285,7 +282,9 @@ class RollOptionRuleElement extends RuleElementPF2e<RollOptionSchema> {
     }
 }
 
-interface RollOptionRuleElement extends RuleElementPF2e<RollOptionSchema>, ModelPropsFromSchema<RollOptionSchema> {}
+interface RollOptionRuleElement extends RuleElementPF2e<RollOptionSchema>, ModelPropsFromSchema<RollOptionSchema> {
+    value: boolean | string;
+}
 
 type RollOptionSchema = RuleElementSchema & {
     scope: StringField<string, string, false, false, true>;
@@ -295,7 +294,11 @@ type RollOptionSchema = RuleElementSchema & {
     suboptions: ArrayField<
         SchemaField<SuboptionData, SourceFromSchema<SuboptionData>, SourceFromSchema<SuboptionData>, true, false, true>
     >;
-
+    /**
+     * The value of the roll option: either a boolean or a string resolves to a boolean If omitted, it defaults to
+     * `true` unless also `togglable`, in which case to `false`.
+     */
+    value: ResolvableValueField<false, false, false>;
     /** An optional predicate to determine whether the toggle is interactable by the user */
     disabledIf: PredicateField<false, false, false>;
     /** The value of the roll option if its toggle is disabled: null indicates the pre-disabled value is preserved */

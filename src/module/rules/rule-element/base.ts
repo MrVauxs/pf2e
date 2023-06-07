@@ -1,14 +1,14 @@
 import { ActorPF2e } from "@actor";
-import { ActorType } from "@actor/data";
-import { DiceModifierPF2e, ModifierPF2e } from "@actor/modifiers";
+import { ActorType } from "@actor/data/index.ts";
+import { DiceModifierPF2e, ModifierPF2e } from "@actor/modifiers.ts";
 import { ItemPF2e, PhysicalItemPF2e, WeaponPF2e } from "@item";
-import { ItemSourcePF2e } from "@item/data";
-import { LaxSchemaField, PredicateField, SlugField } from "@system/schema-data-fields";
-import { TokenDocumentPF2e } from "@scene";
-import { CheckRoll } from "@system/check";
+import { ItemSourcePF2e } from "@item/data/index.ts";
+import { TokenDocumentPF2e } from "@scene/index.ts";
+import { CheckRoll } from "@system/check/index.ts";
+import { LaxSchemaField, PredicateField, SlugField } from "@system/schema-data-fields.ts";
 import { isObject, tupleHasValue } from "@util";
-import { BracketedValue, RuleElementData, RuleElementSchema, RuleElementSource, RuleValue } from "./data";
-import { DataModelValidationOptions } from "types/foundry/common/abstract/module.mjs";
+import type { DataModelValidationOptions } from "types/foundry/common/abstract/data.d.ts";
+import { BracketedValue, RuleElementData, RuleElementSchema, RuleElementSource, RuleValue } from "./data.ts";
 
 const { DataModel } = foundry.abstract;
 const { fields } = foundry.data;
@@ -33,7 +33,7 @@ abstract class RuleElementPF2e<TSchema extends RuleElementSchema = RuleElementSc
      * @param source unserialized JSON data from the actual rule input
      * @param item where the rule is persisted on
      */
-    constructor(source: RuleElementSource, public item: Embedded<ItemPF2e>, options: RuleElementOptions = {}) {
+    constructor(source: RuleElementSource, public item: ItemPF2e<ActorPF2e>, options: RuleElementOptions = {}) {
         source.label ??= item.name;
         super(source, { strict: false });
 
@@ -44,7 +44,7 @@ abstract class RuleElementPF2e<TSchema extends RuleElementSchema = RuleElementSc
         const validActorType = tupleHasValue(this.constructor.validActorTypes, item.actor.type);
         if (!validActorType) {
             const ruleName = game.i18n.localize(`PF2E.RuleElement.${this.key}`);
-            const actorType = game.i18n.localize(`ACTOR.Type${item.actor.type.titleCase()}`);
+            const actorType = game.i18n.localize(`TYPES.Actor.${item.actor.type}`);
             console.warn(`PF2e System | A ${ruleName} rules element may not be applied to a ${actorType}`);
             source.ignored = true;
         }
@@ -72,7 +72,9 @@ abstract class RuleElementPF2e<TSchema extends RuleElementSchema = RuleElementSc
             // The DataModel schema defaulted `ignored` to `false`: only change to true if not already true
             if (this.ignored === false) {
                 this.ignored =
-                    (!!this.requiresEquipped && !item.isEquipped) || (!!this.requiresInvestment && !item.isInvested);
+                    (!!this.requiresEquipped && !item.isEquipped) ||
+                    item.system.equipped.carryType === "dropped" ||
+                    (!!this.requiresInvestment && !item.isInvested);
             }
         } else {
             this.requiresEquipped = null;
@@ -118,6 +120,11 @@ abstract class RuleElementPF2e<TSchema extends RuleElementSchema = RuleElementSc
         return controlled?.document ?? tokens.shift()?.document ?? null;
     }
 
+    /** Generate a label without a leading title (such as "Effect:") */
+    protected getReducedLabel(label = this.label): string {
+        return label.includes(":") ? label.replace(/^[^:]+:\s*|\s*\([^)]+\)$/g, "") : label;
+    }
+
     /** Disallow invalid data fallbacks */
     override validate(options: DataModelValidationOptions = {}): boolean {
         options.fallback = false;
@@ -125,18 +132,21 @@ abstract class RuleElementPF2e<TSchema extends RuleElementSchema = RuleElementSc
     }
 
     /** Test this rule element's predicate, if present */
-    test(rollOptions?: string[] | Set<string>): boolean {
+    protected test(rollOptions?: string[] | Set<string>): boolean {
         if (this.ignored) return false;
         if (this.predicate.length === 0) return true;
 
-        const optionSet =
-            rollOptions instanceof Set ? rollOptions : new Set(rollOptions ?? this.actor.getRollOptions());
+        const optionSet = new Set([
+            ...(rollOptions ?? this.actor.getRollOptions()),
+            // Always include the item roll options of this rule element's parent item
+            ...this.item.getRollOptions("parent"),
+        ]);
 
         return this.resolveInjectedProperties(this.predicate).test(optionSet);
     }
 
     /** Send a deferred warning to the console indicating that a rule element's validation failed */
-    failValidation(...message: string[]): void {
+    protected failValidation(...message: string[]): void {
         const fullMessage = message.join(" ");
         const { name, uuid } = this.item;
         if (!this.suppressWarnings) {
@@ -193,7 +203,7 @@ abstract class RuleElementPF2e<TSchema extends RuleElementSchema = RuleElementSc
                 const data = key === "rule" ? this.data : key === "actor" || key === "item" ? this[key] : this.item;
                 const value = getProperty(data, prop);
                 if (value === undefined) {
-                    this.failValidation("Failed to resolve injected property");
+                    this.failValidation(`Failed to resolve injected property "${source}"`);
                 }
                 return String(value);
             });
@@ -243,19 +253,14 @@ abstract class RuleElementPF2e<TSchema extends RuleElementSchema = RuleElementSc
                 const { actor, item } = this;
 
                 switch (source) {
-                    case "actor": {
-                        return (
-                            Number(getProperty({ ...actor, data: actor.system }, field.substring(separator + 1))) || 0
-                        );
-                    }
-                    case "item": {
-                        return Number(getProperty({ ...item, data: item.system }, field.substring(separator + 1))) || 0;
-                    }
-                    case "rule": {
-                        return Number(getProperty(this.data, field.substring(separator + 1))) || 0;
-                    }
+                    case "actor":
+                        return Number(getProperty(actor, field.substring(separator + 1))) || 0;
+                    case "item":
+                        return Number(getProperty(item, field.substring(separator + 1))) || 0;
+                    case "rule":
+                        return Number(getProperty(this, field.substring(separator + 1))) || 0;
                     default:
-                        return Number(getProperty({ ...actor, data: actor.system }, field.substring(0))) || 0;
+                        return Number(getProperty(actor, field.substring(0))) || 0;
                 }
             })();
             const brackets = valueData?.brackets ?? [];
@@ -283,13 +288,15 @@ abstract class RuleElementPF2e<TSchema extends RuleElementSchema = RuleElementSc
         const saferEval = (formula: string): number => {
             try {
                 // If any resolvables were not provided for this formula, return the default value
-                const unresolved = /@[a-z]+/i.exec(formula) ?? [];
-                for (const resolvable of unresolved) {
-                    if (resolvable === "@target") continue; // Allow to fail with no warning
-                    this.failValidation(`This rule element requires a "${resolvable}" object, but none was provided.`);
+                const unresolveds = formula.match(/@[a-z]+/gi) ?? [];
+                // Allow failure of "@target" with no warning
+                if (unresolveds.length > 0) {
+                    if (!unresolveds.every((u) => u === "@target")) {
+                        this.failValidation(`Failed to resolve all components of formula, "${formula}"`);
+                    }
+                    return 0;
                 }
-
-                return unresolved.length === 0 ? Roll.safeEval(formula) : 0;
+                return Roll.safeEval(formula);
             } catch {
                 this.failValidation(`Error thrown while attempting to evaluate formula, "${formula}"`);
                 return 0;
@@ -417,16 +424,16 @@ namespace RuleElementPF2e {
         /** All items pending creation in a `ItemPF2e.createDocuments` call */
         pendingItems: PreCreate<ItemSourcePF2e>[];
         /** The context object from the `ItemPF2e.createDocuments` call */
-        context: DocumentModificationContext<ItemPF2e>;
+        context: DocumentModificationContext<ActorPF2e | null>;
         /** Whether this preCreate run is from a pre-update reevaluation */
         reevaluation?: boolean;
     }
 
     export interface PreDeleteParams {
         /** All items pending deletion in a `ItemPF2e.deleteDocuments` call */
-        pendingItems: Embedded<ItemPF2e>[];
+        pendingItems: ItemPF2e<ActorPF2e>[];
         /** The context object from the `ItemPF2e.deleteDocuments` call */
-        context: DocumentModificationContext<ItemPF2e>;
+        context: DocumentModificationContext<ActorPF2e | null>;
     }
 
     export interface AfterRollParams {

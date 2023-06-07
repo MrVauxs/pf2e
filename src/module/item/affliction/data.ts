@@ -1,8 +1,8 @@
-import { SaveType } from "@actor/types";
-import { EffectAuraData, EffectContextData, EffectTraits, TimeUnit } from "@item/abstract-effect";
-import { ConditionSlug } from "@item/condition";
-import { BaseItemSourcePF2e, ItemFlagsPF2e, ItemSystemData, ItemSystemSource } from "@item/data/base";
-import { DamageCategoryUnique, DamageType } from "@system/damage";
+import { SaveType } from "@actor/types.ts";
+import { EffectAuraData, EffectContextData, EffectTraits, TimeUnit } from "@item/abstract-effect/index.ts";
+import { ConditionSlug } from "@item/condition/index.ts";
+import { BaseItemSourcePF2e, ItemFlagsPF2e, ItemSystemData, ItemSystemSource } from "@item/data/base.ts";
+import { DamageCategoryUnique, DamageType } from "@system/damage/index.ts";
 
 type AfflictionSource = BaseItemSourcePF2e<"affliction", AfflictionSystemSource> & {
     flags: DeepPartial<AfflictionFlags>;
@@ -41,22 +41,26 @@ interface AfflictionOnset {
 }
 
 interface AfflictionDamage {
-    value: string;
+    formula: string;
     type: DamageType;
-    category?: DamageCategoryUnique;
+    category?: DamageCategoryUnique | null;
 }
 
 interface AfflictionStageData {
     damage: Record<string, AfflictionDamage>;
     conditions: Record<string, AfflictionConditionData>;
-    effects: {
-        uuid: ItemUUID;
-    }[];
+    effects: AfflictionEffectData[];
 }
 
 interface AfflictionConditionData {
     slug: ConditionSlug;
     value?: number;
+    /** Whether the condition should disappear when the stage changes. Defaults to true */
+    linked?: boolean;
+}
+
+interface AfflictionEffectData {
+    uuid: ItemUUID;
 }
 
 export {

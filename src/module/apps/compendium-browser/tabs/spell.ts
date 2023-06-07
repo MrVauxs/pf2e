@@ -1,8 +1,8 @@
 import { getActionIcon, sluggify } from "@util";
-import { CompendiumBrowser } from "..";
-import { ContentTabName } from "../data";
-import { CompendiumBrowserTab } from "./base";
-import { CompendiumBrowserIndexData, SpellFilters } from "./data";
+import { CompendiumBrowser } from "../index.ts";
+import { ContentTabName } from "../data.ts";
+import { CompendiumBrowserTab } from "./base.ts";
+import { CompendiumBrowserIndexData, SpellFilters } from "./data.ts";
 
 export class CompendiumBrowserSpellTab extends CompendiumBrowserTab {
     tabName: ContentTabName = "spell";
@@ -91,9 +91,9 @@ export class CompendiumBrowserSpellTab extends CompendiumBrowserTab {
 
                     // Prepare source
                     const source = spellData.system.source.value;
+                    const sourceSlug = sluggify(source);
                     if (source) {
                         sources.add(source);
-                        spellData.system.source.value = sluggify(source);
                     }
 
                     spells.push({
@@ -108,7 +108,7 @@ export class CompendiumBrowserSpellTab extends CompendiumBrowserTab {
                         traditions: spellData.system.traditions.value,
                         traits: spellData.system.traits.value,
                         rarity: spellData.system.traits.rarity,
-                        source: spellData.system.source.value,
+                        source: sourceSlug,
                     });
                 }
             }

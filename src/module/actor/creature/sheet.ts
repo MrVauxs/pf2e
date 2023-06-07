@@ -1,20 +1,22 @@
-import { CreaturePF2e } from "@actor";
-import { createSpellcastingDialog } from "@actor/sheet/spellcasting-dialog";
-import { ABILITY_ABBREVIATIONS, SKILL_DICTIONARY } from "@actor/values";
-import { ItemPF2e, SpellPF2e } from "@item";
-import { SpellcastingEntryPF2e, SpellcastingSheetData } from "@item/spellcasting-entry";
-import { ItemSourcePF2e } from "@item/data";
-import { ITEM_CARRY_TYPES } from "@item/data/values";
-import { DropCanvasItemDataPF2e } from "@module/canvas/drop-canvas-data";
-import { goesToEleven, ZeroToFour } from "@module/data";
-import { createSheetTags } from "@module/sheet/helpers";
-import { eventToRollParams } from "@scripts/sheet-util";
+import { ActorPF2e, CreaturePF2e } from "@actor";
+import { createSpellcastingDialog } from "@actor/sheet/spellcasting-dialog.ts";
+import { ABILITY_ABBREVIATIONS, SKILL_DICTIONARY } from "@actor/values.ts";
+import { ItemPF2e, SpellPF2e, SpellcastingEntryPF2e } from "@item";
+import { ActionCategory, ActionTrait } from "@item/action/index.ts";
+import { SpellcastingSheetData } from "@item/spellcasting-entry/index.ts";
+import { ItemSourcePF2e } from "@item/data/index.ts";
+import { ActionType } from "@item/data/base.ts";
+import { ITEM_CARRY_TYPES } from "@item/data/values.ts";
+import { DropCanvasItemDataPF2e } from "@module/canvas/drop-canvas-data.ts";
+import { goesToEleven, ZeroToFour } from "@module/data.ts";
+import { createSheetTags } from "@module/sheet/helpers.ts";
+import { eventToRollParams } from "@scripts/sheet-util.ts";
 import { ErrorPF2e, fontAwesomeIcon, htmlClosest, htmlQueryAll, objectHasKey, setHasElement } from "@util";
-import { ActorSheetPF2e } from "../sheet/base";
-import { CreatureConfig } from "./config";
-import { SkillAbbreviation, SkillData } from "./data";
-import { SpellPreparationSheet } from "./spell-preparation-sheet";
-import { CreatureSheetData } from "./types";
+import { ActorSheetPF2e } from "../sheet/base.ts";
+import { CreatureConfig } from "./config.ts";
+import { SkillAbbreviation, SkillData } from "./data.ts";
+import { SpellPreparationSheet } from "./spell-preparation-sheet.ts";
+import { CreatureSheetData } from "./types.ts";
 
 /**
  * Base class for NPC and character sheets
@@ -74,7 +76,7 @@ export abstract class CreatureSheetPF2e<TActor extends CreaturePF2e> extends Act
             return TextEditor.enrichHTML(content, { rollData, async: true });
         };
         const actorRollData = this.actor.getRollData();
-        const conditions = game.pf2e.ConditionManager.getFlattenedConditions(actor.itemTypes.condition);
+        const conditions = game.pf2e.ConditionManager.getFlattenedConditions(actor);
         for (const condition of conditions) {
             const item = this.actor.items.get(condition.id);
             if (item) {
@@ -128,7 +130,7 @@ export abstract class CreatureSheetPF2e<TActor extends CreaturePF2e> extends Act
     }
 
     /** Opens the spell preparation sheet, but only if its a prepared entry */
-    protected openSpellPreparationSheet(entryId: string) {
+    protected openSpellPreparationSheet(entryId: string): void {
         const entry = this.actor.items.get(entryId);
         if (entry?.isOfType("spellcastingEntry") && entry.isPrepared) {
             const $book = this.element.find(`.item-container[data-container-id="${entry.id}"] .prepared-toggle`);
@@ -261,6 +263,14 @@ export abstract class CreatureSheetPF2e<TActor extends CreaturePF2e> extends Act
             this.actor.skills[key]?.check.roll(rollParams);
         });
 
+        // Roll perception checks
+        for (const element of htmlQueryAll(html, "a[data-action=perception-check]")) {
+            element.addEventListener("click", (event) => {
+                const extraRollOptions = element.dataset.secret ? ["secret"] : [];
+                this.actor.perception.roll({ ...eventToRollParams(event), extraRollOptions });
+            });
+        }
+
         // Add, edit, and remove spellcasting entries
         for (const section of htmlQueryAll(html, ".tab.spellcasting, .tab.spells") ?? []) {
             for (const element of htmlQueryAll(section, "[data-action=spellcasting-create]") ?? []) {
@@ -272,8 +282,10 @@ export abstract class CreatureSheetPF2e<TActor extends CreaturePF2e> extends Act
             for (const element of htmlQueryAll(section, "[data-action=spellcasting-edit]") ?? []) {
                 element.addEventListener("click", (event) => {
                     const containerId = htmlClosest(event.target, "[data-item-id]")?.dataset.itemId;
-                    const entry = this.actor.spellcasting.get(containerId, { strict: true });
-                    createSpellcastingDialog(event, entry as Embedded<SpellcastingEntryPF2e>);
+                    const entry = this.actor.items.get(containerId, { strict: true });
+                    if (entry.isOfType("spellcastingEntry")) {
+                        createSpellcastingDialog(event, entry);
+                    }
                 });
             }
 
@@ -367,7 +379,7 @@ export abstract class CreatureSheetPF2e<TActor extends CreaturePF2e> extends Act
 
         // Action Browser
         for (const button of htmlQueryAll(html, ".action-browse")) {
-            button.addEventListener("click", () => game.pf2e.compendiumBrowser.openTab("action"));
+            button.addEventListener("click", () => this.#onClickBrowseActions(button));
         }
 
         // Spell Browser
@@ -377,7 +389,10 @@ export abstract class CreatureSheetPF2e<TActor extends CreaturePF2e> extends Act
     }
 
     /** Adds support for moving spells between spell levels, spell collections, and spell preparation */
-    protected override async _onSortItem(event: ElementDragEvent, itemSource: ItemSourcePF2e): Promise<ItemPF2e[]> {
+    protected override async _onSortItem(
+        event: ElementDragEvent,
+        itemSource: ItemSourcePF2e
+    ): Promise<ItemPF2e<TActor>[]> {
         const dropItemEl = htmlClosest(event.target, ".item");
         const dropContainerEl = htmlClosest(event.target, ".item-container");
 
@@ -385,11 +400,12 @@ export abstract class CreatureSheetPF2e<TActor extends CreaturePF2e> extends Act
         const dropContainerType = dropContainerEl?.dataset.containerType;
 
         const item = this.actor.items.get(itemSource._id);
-        if (!(item && dropItemEl && dropContainerEl)) return [];
+        if (!item) return [];
 
         // if they are dragging onto another spell, it's just sorting the spells
         // or moving it from one spellcastingEntry to another
         if (item.isOfType("spell")) {
+            if (!(dropItemEl && dropContainerEl)) return [];
             const entryId = dropContainerEl.dataset.containerId;
             const collection = this.actor.spellcasting.collections.get(entryId, { strict: true });
 
@@ -404,7 +420,7 @@ export abstract class CreatureSheetPF2e<TActor extends CreaturePF2e> extends Act
 
                 if (Number.isInteger(dropId) && Number.isInteger(slotLevel)) {
                     const allocated = await collection.prepareSpell(item, slotLevel, dropId);
-                    if (allocated) return [allocated];
+                    if (allocated instanceof SpellcastingEntryPF2e) return [allocated];
                 }
             } else if (dropSlotType === "spell") {
                 const dropId = dropItemEl.dataset.itemId ?? "";
@@ -444,7 +460,7 @@ export abstract class CreatureSheetPF2e<TActor extends CreaturePF2e> extends Act
         } else if (item.isOfType("spellcastingEntry") && dropContainerType === "spellcastingEntry") {
             // target and source are spellcastingEntries and need to be sorted
             const sourceId = item.id;
-            const dropId = dropContainerEl.dataset.containerId ?? "";
+            const dropId = dropContainerEl?.dataset.containerId ?? "";
             const source = this.actor.items.get(sourceId);
             const target = this.actor.items.get(dropId);
 
@@ -465,9 +481,9 @@ export abstract class CreatureSheetPF2e<TActor extends CreaturePF2e> extends Act
     /** Handle dragging spells onto spell slots. */
     protected override async _handleDroppedItem(
         event: ElementDragEvent,
-        item: ItemPF2e,
+        item: ItemPF2e<ActorPF2e | null>,
         data: DropCanvasItemDataPF2e
-    ): Promise<ItemPF2e[]> {
+    ): Promise<ItemPF2e<ActorPF2e | null>[]> {
         const containerEl = htmlClosest(event.target, ".item-container[data-container-type=spellcastingEntry]");
         if (containerEl && item.isOfType("spell") && !item.isRitual) {
             const entryId = containerEl.dataset.containerId;
@@ -512,6 +528,13 @@ export abstract class CreatureSheetPF2e<TActor extends CreaturePF2e> extends Act
         }
 
         spell.update({ "system.location.signature": !spell.system.location.signature });
+    }
+
+    #onClickBrowseActions(button: HTMLElement) {
+        const types = (button.dataset.actionType || "").split(",") as ActionType[];
+        const traits = (button.dataset.actionTrait || "").split(",") as ActionTrait[];
+        const categories = (button.dataset.actionCategory || "").split(",") as ActionCategory[];
+        game.pf2e.compendiumBrowser.openActionTab({ types, traits, categories });
     }
 
     #onClickBrowseSpellCompendia(button: HTMLElement) {

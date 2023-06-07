@@ -2,7 +2,9 @@ export {};
 
 declare global {
     /** A Token is an implementation of PlaceableObject that represents an Actor within a viewed Scene on the game canvas. */
-    class Token<TDocument extends TokenDocument = TokenDocument> extends PlaceableObject<TDocument> {
+    class Token<
+        TDocument extends TokenDocument<Scene | null> = TokenDocument<Scene | null>
+    > extends PlaceableObject<TDocument> {
         constructor(document: TDocument);
 
         /** A reference to an animation that is currently in progress for this Token, if any */
@@ -221,6 +223,8 @@ declare global {
         /** Update display of the Token, pulling latest data and re-rendering the display of Token components */
         refresh(): this;
 
+        protected override _refresh(options: object): void;
+
         /** Draw the Token border, taking into consideration the grid type and border color */
         protected _refreshBorder(): void;
 
@@ -400,9 +404,9 @@ declare global {
         /**
          * Add or remove the currently controlled Tokens from the active combat encounter
          * @param [combat] A specific combat encounter to which this Token should be added
-         * @return The Token which initiated the toggle
+         * @returns The Token which initiated the toggle
          */
-        toggleCombat(combat: Combat): Promise<this>;
+        toggleCombat(combat?: Combat): Promise<this>;
 
         /**
          * Toggle an active effect by its texture path.
@@ -447,65 +451,66 @@ declare global {
         /*  Event Listeners and Handlers                */
         /* -------------------------------------------- */
 
-        override _onCreate(
+        protected override _onCreate(
             data: TDocument["_source"],
-            options: DocumentModificationContext<TDocument>,
+            options: DocumentModificationContext<TDocument["parent"]>,
             userId: string
         ): void;
 
-        override _onUpdate(
+        protected override _onUpdate(
             changed: DeepPartial<TDocument["_source"]>,
-            options: DocumentModificationContext,
+            options: DocumentModificationContext<TDocument["parent"]>,
             userId: string
         ): void;
 
         /** Control updates to the appearance of the Token and its linked TokenMesh when a data update occurs. */
         protected _onUpdateAppearance(
-            data: DeepPartial<foundry.data.TokenSource>,
+            data: DeepPartial<TDocument["_source"]>,
             changed: Set<string>,
-            options: DocumentModificationContext
+            options: DocumentModificationContext<TDocument["parent"]>
         ): Promise<void>;
 
         /** Define additional steps taken when an existing placeable object of this type is deleted */
-        override _onDelete(options: DocumentModificationContext<TDocument>, userId: string): void;
+        protected override _onDelete(options: DocumentModificationContext<TDocument["parent"]>, userId: string): void;
 
-        protected override _canControl(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected override _canControl(user: User, event?: PIXI.FederatedEvent): boolean;
 
-        protected override _canHUD(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected override _canHUD(user: User, event?: PIXI.FederatedEvent): boolean;
 
-        protected override _canConfigure(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected override _canConfigure(user: User, event?: PIXI.FederatedEvent): boolean;
 
-        protected override _canHover(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected override _canHover(user: User, event?: PIXI.FederatedEvent): boolean;
 
-        protected override _canView(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected override _canView(user: User, event?: PIXI.FederatedEvent): boolean;
 
-        protected override _canDrag(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected override _canDrag(user: User, event?: PIXI.FederatedEvent): boolean;
 
         protected override _onHoverIn(
-            event: PIXI.InteractionEvent,
+            event: PIXI.FederatedEvent,
             { hoverOutOthers }?: { hoverOutOthers?: boolean }
         ): boolean | void;
 
-        protected override _onHoverOut(event: PIXI.InteractionEvent): boolean | void;
+        protected override _onHoverOut(event: PIXI.FederatedEvent): boolean | void;
 
-        protected override _onClickLeft(event: PIXI.InteractionEvent): void;
+        protected override _onClickLeft(event: PIXI.FederatedEvent): void;
 
-        protected override _onClickLeft2(event: PIXI.InteractionEvent): void;
+        protected override _onClickLeft2(event: PIXI.FederatedEvent): void;
 
-        protected override _onClickRight2(event: PIXI.InteractionEvent): void;
+        protected override _onClickRight2(event: PIXI.FederatedEvent): void;
 
-        protected override _onDragLeftDrop(event: TokenInteractionEvent<this>): Promise<TDocument[]>;
+        protected override _onDragLeftDrop(event: TokenFederatedEvent<this>): Promise<TDocument[]>;
 
-        protected override _onDragLeftMove(event: TokenInteractionEvent<this>): void;
+        protected override _onDragLeftMove(event: TokenFederatedEvent<this>): void;
 
-        protected override _onDragLeftCancel(event: TokenInteractionEvent<this>): void;
+        protected override _onDragLeftCancel(event: TokenFederatedEvent<this>): void;
 
         protected override _onDragStart(): void;
 
         protected override _onDragEnd(): void;
     }
 
-    interface Token<TDocument extends TokenDocument = TokenDocument> extends PlaceableObject<TDocument> {
+    interface Token<TDocument extends TokenDocument<Scene | null> = TokenDocument<Scene | null>>
+        extends PlaceableObject<TDocument> {
         get layer(): TokenLayer<this>;
     }
 
@@ -546,8 +551,8 @@ declare global {
         editable: boolean;
     }
 
-    interface TokenInteractionEvent<T extends Token> extends PIXI.InteractionEvent {
-        data: PIXI.InteractionData & {
+    interface TokenFederatedEvent<T extends Token> extends PIXI.FederatedEvent {
+        interactionData: {
             clones?: T[];
         };
     }

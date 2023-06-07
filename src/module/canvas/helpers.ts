@@ -1,5 +1,5 @@
-import { MeasuredTemplatePF2e } from "./measured-template";
-import { TokenPF2e } from "./token";
+import { MeasuredTemplatePF2e } from "./measured-template.ts";
+import { TokenPF2e } from "./token/index.ts";
 
 /**
  * Measure the minimum distance between two rectangles
@@ -277,7 +277,12 @@ function highlightGrid({
             const distance = measureDistance(destination, origin);
             if (distance > document.distance) continue;
 
-            const hasCollision = canvas.ready && canvas.walls.checkCollision(ray, { type: collisionType, mode: "any" });
+            const hasCollision =
+                canvas.ready &&
+                CONFIG.Canvas.polygonBackends[collisionType].testCollision(origin, destination, {
+                    type: collisionType,
+                    mode: "any",
+                });
 
             if (hasCollision) {
                 grid.grid.highlightGridPosition(highlightLayer, {

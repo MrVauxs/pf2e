@@ -1,10 +1,11 @@
+import { ActorPF2e } from "@actor/base.ts";
 import {
     Abilities,
     BaseCreatureSource,
     CreatureAttributes,
     CreatureDetails,
     CreatureHitPoints,
-    CreatureInitiative,
+    CreatureInitiativeSource,
     CreatureResources,
     CreatureResourcesSource,
     CreatureSpeeds,
@@ -15,16 +16,16 @@ import {
     HeldShieldData,
     LabeledSpeed,
     SaveData,
-    SkillAbbreviation,
-    SkillData,
-} from "@actor/creature/data";
-import { ActorAttributesSource, ActorFlagsPF2e, ArmorClassData, PerceptionData, StrikeData } from "@actor/data/base";
-import { ActorSizePF2e } from "@actor/data/size";
-import { ModifierPF2e, StatisticModifier } from "@actor/modifiers";
-import { AbilityString, ActorAlliance, SaveType } from "@actor/types";
+} from "@actor/creature/data.ts";
+import { ActorAttributesSource, ActorFlagsPF2e, PerceptionData, StrikeData } from "@actor/data/base.ts";
+import { ActorSizePF2e } from "@actor/data/size.ts";
+import { ModifierPF2e, StatisticModifier } from "@actor/modifiers.ts";
+import { AbilityString, ActorAlliance, SaveType } from "@actor/types.ts";
 import { MeleePF2e } from "@item";
-import { Rarity, Size } from "@module/data";
-import { IdentifyCreatureData } from "@module/recall-knowledge";
+import { Rarity, Size } from "@module/data.ts";
+import { ArmorClassTraceData } from "@system/statistic/armor-class.ts";
+import { StatisticTraceData } from "@system/statistic/data.ts";
+import { InitiativeTraceData } from "@actor/initiative.ts";
 
 interface NPCSource extends BaseCreatureSource<"npc", NPCSystemSource> {
     flags: DeepPartial<NPCFlags>;
@@ -71,9 +72,7 @@ interface NPCAttributesSource extends Required<ActorAttributesSource> {
         temp: number;
         details: string;
     };
-    initiative: {
-        ability: SkillAbbreviation | "perception";
-    };
+    initiative: CreatureInitiativeSource;
     perception: {
         value: number;
     };
@@ -156,13 +155,11 @@ interface NPCTraitsData extends Omit<CreatureTraitsData, "senses">, NPCTraitsSou
 interface NPCAttributes
     extends Omit<NPCAttributesSource, "initiative" | "immunities" | "weaknesses" | "resistances">,
         CreatureAttributes {
-    ac: NPCArmorClass;
+    ac: ArmorClassTraceData;
     adjustment: "elite" | "weak" | null;
     hp: NPCHitPoints;
     perception: NPCPerception;
-
-    initiative: CreatureInitiative;
-
+    initiative: InitiativeTraceData;
     speed: NPCSpeeds;
     /**
      * Data related to the currently equipped shield. This is copied from the shield data itself, and exists to
@@ -187,13 +184,11 @@ interface NPCDetails extends NPCDetailsSource {
     };
 
     alliance: ActorAlliance;
-
-    identification: IdentifyCreatureData;
 }
 
 /** The full data for a NPC action (used primarily for strikes.) */
 interface NPCStrike extends StrikeData {
-    item: Embedded<MeleePF2e>;
+    item: MeleePF2e<ActorPF2e>;
     /** The type of attack as a localization string */
     attackRollType?: string;
     /** The id of the item this strike is generated from */
@@ -202,12 +197,6 @@ interface NPCStrike extends StrikeData {
     additionalEffects: { tag: string; label: string }[];
     /** A melee usage of a firearm: not available on NPC strikes */
     altUsages?: never;
-}
-
-/** AC data with an additional "base" value */
-interface NPCArmorClass extends StatisticModifier, ArmorClassData {
-    base?: number;
-    details: string;
 }
 
 /** Save data with an additional "base" value */
@@ -234,14 +223,13 @@ interface NPCPerception extends PerceptionData {
 }
 
 /** Skill data with a "base" value and whether the skill should be rendered (visible) */
-interface NPCSkillData extends SkillData {
+interface NPCSkillData extends StatisticTraceData {
     base?: number;
     visible?: boolean;
     isLore?: boolean;
     itemID?: string;
     ability: AbilityString;
-    label: string;
-    expanded: string;
+    variants: { label: string; options: string }[];
 }
 
 interface NPCSpeeds extends CreatureSpeeds {
@@ -249,7 +237,6 @@ interface NPCSpeeds extends CreatureSpeeds {
 }
 
 export {
-    NPCArmorClass,
     NPCAttributes,
     NPCAttributesSource,
     NPCFlags,

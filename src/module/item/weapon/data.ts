@@ -1,4 +1,4 @@
-import { ItemFlagsPF2e } from "@item/data/base";
+import { ItemFlagsPF2e } from "@item/data/base.ts";
 import {
     BasePhysicalItemSource,
     Investable,
@@ -7,9 +7,10 @@ import {
     PhysicalSystemSource,
     PreciousMaterialGrade,
     UsageDetails,
-} from "@item/physical";
-import { OneToFour, ZeroToFour, ZeroToThree } from "@module/data";
-import { DamageDieSize, DamageType } from "@system/damage";
+} from "@item/physical/index.ts";
+import { OneToFour, ZeroToFour, ZeroToThree } from "@module/data.ts";
+import { DamageDieSize, DamageType } from "@system/damage/index.ts";
+import { WeaponTraitToggles } from "./helpers.ts";
 import {
     BaseWeaponType,
     MeleeWeaponGroup,
@@ -22,7 +23,8 @@ import {
     WeaponRangeIncrement,
     WeaponReloadTime,
     WeaponTrait,
-} from "./types";
+} from "./types.ts";
+import { AbilityString } from "@actor/types.ts";
 
 type WeaponSource = BasePhysicalItemSource<"weapon", WeaponSystemSource> & {
     flags: DeepPartial<WeaponFlags>;
@@ -36,8 +38,12 @@ type WeaponFlags = ItemFlagsPF2e & {
     };
 };
 
-interface WeaponTraits extends PhysicalItemTraits<WeaponTrait> {
+interface WeaponTraitsSource extends PhysicalItemTraits<WeaponTrait> {
     otherTags: OtherWeaponTag[];
+    toggles?: {
+        modular?: { selection: DamageType | null };
+        versatile?: { selection: DamageType | null };
+    };
 }
 
 interface WeaponDamage {
@@ -86,7 +92,7 @@ interface WeaponPropertyRuneSlot {
 }
 
 interface WeaponSystemSource extends Investable<PhysicalSystemSource> {
-    traits: WeaponTraits;
+    traits: WeaponTraitsSource;
     category: WeaponCategory;
     group: WeaponGroup | null;
     baseItem: BaseWeaponType | null;
@@ -111,6 +117,8 @@ interface WeaponSystemSource extends Investable<PhysicalSystemSource> {
     MAP: {
         value: string;
     };
+    /** An optional override of the default ability modifier used in attack rolls with this weapon  */
+    ability?: AbilityString | null;
     /** A combination weapon's melee usage */
     meleeUsage?: ComboWeaponMeleeUsage;
     /** Whether the weapon is a "specific magic weapon" */
@@ -145,13 +153,16 @@ interface WeaponSystemSource extends Investable<PhysicalSystemSource> {
 
 interface WeaponSystemData
     extends Omit<WeaponSystemSource, "identification" | "price" | "temporary">,
-        Omit<Investable<PhysicalSystemData>, "traits"> {
+        Investable<PhysicalSystemData> {
+    traits: WeaponTraits;
     baseItem: BaseWeaponType | null;
     maxRange: number | null;
     reload: {
         value: WeaponReloadTime | null;
         /** Whether the ammunition (or the weapon itself, if thrown) should be consumed upon firing */
         consume: boolean | null;
+        /** A display label for use in any view */
+        label: string | null;
     };
     runes: {
         potency: ZeroToFour;
@@ -161,6 +172,12 @@ interface WeaponSystemData
     };
     material: WeaponMaterialData;
     usage: UsageDetails & WeaponSystemSource["usage"];
+    meleeUsage?: Required<ComboWeaponMeleeUsage>;
+}
+
+interface WeaponTraits extends WeaponTraitsSource {
+    otherTags: OtherWeaponTag[];
+    toggles: WeaponTraitToggles;
 }
 
 interface WeaponMaterialData {
@@ -174,7 +191,8 @@ interface WeaponMaterialData {
 interface ComboWeaponMeleeUsage {
     damage: { type: DamageType; die: DamageDieSize };
     group: MeleeWeaponGroup;
-    traits: WeaponTrait[];
+    traits?: WeaponTrait[];
+    traitToggles?: { modular: DamageType | null; versatile: DamageType | null };
 }
 
 export {

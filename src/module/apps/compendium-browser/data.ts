@@ -1,6 +1,11 @@
-import * as browserTabs from "./tabs";
+import * as browserTabs from "./tabs/index.ts";
 
 interface PackInfo {
+    load: boolean;
+    name: string;
+}
+
+interface SourceInfo {
     load: boolean;
     name: string;
 }
@@ -31,6 +36,7 @@ export {
     PackInfo,
     SortByOption,
     SortDirection,
+    SourceInfo,
     TabData,
     TabName,
 };

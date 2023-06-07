@@ -1,5 +1,5 @@
 declare class AmbientLight<
-    TDocument extends AmbientLightDocument = AmbientLightDocument
+    TDocument extends AmbientLightDocument<Scene | null> = AmbientLightDocument<Scene | null>
 > extends PlaceableObject<TDocument> {
     constructor(document: TDocument);
 
@@ -36,6 +36,8 @@ declare class AmbientLight<
 
     override refresh(): this;
 
+    protected override _refresh(options: object): void;
+
     /** Refresh the display of the ControlIcon for this AmbientLight source */
     refreshControl(): void;
 
@@ -57,37 +59,38 @@ declare class AmbientLight<
     /*  Socket Listeners and Handlers               */
     /* -------------------------------------------- */
 
-    override _onCreate(
+    protected override _onCreate(
         data: TDocument["_source"],
-        options: DocumentModificationContext<TDocument>,
+        options: DocumentModificationContext<TDocument["parent"]>,
         userId: string
     ): void;
 
-    override _onUpdate(
-        changed: DocumentUpdateData<TDocument>,
-        options: DocumentModificationContext<TDocument>,
+    protected override _onUpdate(
+        changed: DeepPartial<TDocument["_source"]>,
+        options: DocumentModificationContext<TDocument["parent"]>,
         userId: string
     ): void;
 
-    override _onDelete(options: DocumentModificationContext<TDocument>, userId: string): void;
+    protected override _onDelete(options: DocumentModificationContext<TDocument["parent"]>, userId: string): void;
 
     /* -------------------------------------------- */
     /*  Mouse Interaction Handlers                  */
     /* -------------------------------------------- */
 
-    protected override _canHUD(user: User, event: PIXI.InteractionEvent): boolean;
+    protected override _canHUD(user: User, event: PIXI.FederatedEvent): boolean;
 
-    protected override _canConfigure(user: User, event: PIXI.InteractionEvent): boolean;
+    protected override _canConfigure(user: User, event: PIXI.FederatedEvent): boolean;
 
-    protected override _onClickRight(event: PIXI.InteractionEvent): void;
+    protected override _onClickRight(event: PIXI.FederatedEvent): void;
 
-    protected override _onDragLeftStart(event: PIXI.InteractionEvent): void;
+    protected override _onDragLeftStart(event: PIXI.FederatedEvent): void;
 
-    protected override _onDragLeftMove(event: PIXI.InteractionEvent): void;
+    protected override _onDragLeftMove(event: PIXI.FederatedEvent): void;
 
-    protected override _onDragLeftCancel(event: PIXI.InteractionEvent): void;
+    protected override _onDragLeftCancel(event: PIXI.FederatedEvent): void;
 }
-
-declare interface AmbientLight {
+declare interface AmbientLight<
+    TDocument extends AmbientLightDocument<Scene | null> = AmbientLightDocument<Scene | null>
+> extends PlaceableObject<TDocument> {
     get layer(): LightingLayer<this>;
 }

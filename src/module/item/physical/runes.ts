@@ -1,18 +1,18 @@
-import { AutomaticBonusProgression as ABP } from "@actor/character/automatic-bonus-progression";
-import { DamageDiceParameters, DamageDicePF2e, ModifierAdjustment } from "@actor/modifiers";
-import { ResistanceType } from "@actor/types";
+import { AutomaticBonusProgression as ABP } from "@actor/character/automatic-bonus-progression.ts";
+import { DamageDiceParameters, DamageDicePF2e, ModifierAdjustment } from "@actor/modifiers.ts";
+import { ResistanceType } from "@actor/types.ts";
 import { ArmorPF2e, WeaponPF2e } from "@item";
-import type { ResilientRuneType } from "@item/armor/types";
-import type { OtherWeaponTag, StrikingRuneType, WeaponPropertyRuneType, WeaponTrait } from "@item/weapon/types";
-import { OneToFour, OneToThree, Rarity, ZeroToFour, ZeroToThree } from "@module/data";
-import { RollNoteSource } from "@module/notes";
-import { PredicatePF2e, RawPredicate } from "@system/predication";
+import type { ResilientRuneType } from "@item/armor/types.ts";
+import type { OtherWeaponTag, StrikingRuneType, WeaponPropertyRuneType, WeaponTrait } from "@item/weapon/types.ts";
+import { OneToFour, OneToThree, Rarity, ZeroToFour, ZeroToThree } from "@module/data.ts";
+import { RollNoteSource } from "@module/notes.ts";
+import { PredicatePF2e, RawPredicate } from "@system/predication.ts";
 import { isBlank } from "@util";
 
 function getPropertySlots(item: WeaponPF2e | ArmorPF2e): ZeroToFour {
     const fromMaterial = item.system.preciousMaterial?.value === "orichalcum" ? 1 : 0;
     const fromPotency = ABP.isEnabled(item.actor)
-        ? ABP.getAttackPotency(item.actor?.level ?? 1)
+        ? ABP.getAttackPotency(item.actor?.level ?? 20) // If the item is unowned, place no limit on slots
         : item.system.runes.potency;
     return (fromMaterial + fromPotency) as ZeroToFour;
 }
@@ -148,6 +148,14 @@ export const WEAPON_PROPERTY_RUNES: Record<WeaponPropertyRuneType, WeaponPropert
         price: 900,
         rarity: "uncommon",
         slug: "anchoring",
+        traits: ["abjuration", "magical"],
+    },
+    authorized: {
+        level: 3,
+        name: "PF2E.WeaponPropertyRune.authorized.Name",
+        price: 50,
+        rarity: "common",
+        slug: "authorized",
         traits: ["abjuration", "magical"],
     },
     axiomatic: {
@@ -339,6 +347,14 @@ export const WEAPON_PROPERTY_RUNES: Record<WeaponPropertyRuneType, WeaponPropert
         rarity: "common",
         slug: "disrupting",
         traits: ["magical", "necromancy"],
+    },
+    earthbinding: {
+        level: 5,
+        name: "PF2E.WeaponPropertyRune.earthbinding.Name",
+        price: 125,
+        rarity: "common",
+        slug: "earthbinding",
+        traits: ["magical", "transmutation"],
     },
     energizing: {
         level: 6,

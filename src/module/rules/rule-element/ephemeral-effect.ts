@@ -1,11 +1,15 @@
-import { DeferredValueParams } from "@actor/modifiers";
+import { DeferredValueParams } from "@actor/modifiers.ts";
 import { ItemPF2e } from "@item";
-import { ConditionSource, EffectSource } from "@item/data";
-import { UUIDUtils } from "@util/uuid-utils";
-import { ArrayField, BooleanField, ModelPropsFromSchema, StringField } from "types/foundry/common/data/fields.mjs";
-import { RuleElementPF2e } from "./base";
-import { RuleElementSchema } from "./data";
-import { ItemAlterationField, WithItemAlterations } from "./mixins";
+import { ConditionSource, EffectSource } from "@item/data/index.ts";
+import { UUIDUtils } from "@util/uuid.ts";
+import type {
+    ArrayField,
+    BooleanField,
+    ModelPropsFromSchema,
+    StringField,
+} from "types/foundry/common/data/fields.d.ts";
+import { ItemAlterationField, applyAlterations } from "./alter-item/index.ts";
+import { RuleElementPF2e, RuleElementSchema } from "./index.ts";
 
 const { fields } = foundry.data;
 
@@ -28,8 +32,8 @@ class EphemeralEffectRuleElement extends RuleElementPF2e<EphemeralEffectSchema> 
         };
     }
 
-    protected override _validateModel(data: SourceFromSchema<EphemeralEffectSchema>): void {
-        super._validateModel(data);
+    static override validateJoint(data: SourceFromSchema<EphemeralEffectSchema>): void {
+        super.validateJoint(data);
 
         if (data.selectors.length === 0) {
             throw Error("must have at least one selector");
@@ -73,13 +77,16 @@ class EphemeralEffectRuleElement extends RuleElementPF2e<EphemeralEffectSchema> 
             }
 
             if (this.adjustName) {
-                const label = this.data.label.includes(":")
-                    ? this.label.replace(/^[^:]+:\s*|\s*\([^)]+\)$/g, "")
-                    : this.label;
+                const label = this.getReducedLabel();
                 source.name = `${source.name} (${label})`;
             }
 
-            this.applyAlterations(source);
+            try {
+                applyAlterations(source, this.alterations);
+            } catch (error) {
+                if (error instanceof Error) this.failValidation(error.message);
+                return null;
+            }
 
             return source;
         };
@@ -88,11 +95,7 @@ class EphemeralEffectRuleElement extends RuleElementPF2e<EphemeralEffectSchema> 
 
 interface EphemeralEffectRuleElement
     extends RuleElementPF2e<EphemeralEffectSchema>,
-        ModelPropsFromSchema<EphemeralEffectSchema>,
-        WithItemAlterations<EphemeralEffectSchema> {}
-
-// Apply mixin
-WithItemAlterations.mixIn(EphemeralEffectRuleElement);
+        ModelPropsFromSchema<EphemeralEffectSchema> {}
 
 type EphemeralEffectSchema = RuleElementSchema & {
     affects: StringField<"target" | "origin", "target" | "origin", true, false, true>;

@@ -58,6 +58,8 @@ declare class Wall<TDocument extends WallDocument<Scene | null>> extends Placeab
 
     refresh(): this;
 
+    protected override _refresh(options: object): void;
+
     /**
      * Compute an approximate Polygon which encloses the line segment providing a specific hitArea for the line
      * @param coords The original wall coordinates
@@ -104,19 +106,19 @@ declare class Wall<TDocument extends WallDocument<Scene | null>> extends Placeab
     /*  Socket Listeners and Handlers               */
     /* -------------------------------------------- */
 
-    override _onCreate(
-        data: foundry.data.WallSource,
-        options: DocumentModificationContext<TDocument>,
+    protected override _onCreate(
+        data: TDocument["_source"],
+        options: DocumentModificationContext<TDocument["parent"]>,
         userId: string
     ): void;
 
-    override _onUpdate(
-        changed: DocumentUpdateData,
-        options: DocumentModificationContext<TDocument>,
+    protected override _onUpdate(
+        changed: DeepPartial<TDocument["_source"]>,
+        options: DocumentModificationContext<TDocument["parent"]>,
         userId: string
     ): void;
 
-    override _onDelete(options: DocumentModificationContext<TDocument>, userId: string): void;
+    protected override _onDelete(options: DocumentModificationContext<TDocument["parent"]>, userId: string): void;
 
     /**
      * Callback actions when a wall that contains a door is moved or its state is changed
@@ -128,26 +130,26 @@ declare class Wall<TDocument extends WallDocument<Scene | null>> extends Placeab
     /*  Interaction Event Callbacks                 */
     /* -------------------------------------------- */
 
-    protected override _canControl(user: User, event?: PIXI.InteractionEvent): boolean;
+    protected override _canControl(user: User, event?: PIXI.FederatedEvent): boolean;
 
-    protected _onHoverIn(event: PIXI.InteractionEvent, options?: { hoverOutOthers?: boolean }): boolean;
+    protected _onHoverIn(event: PIXI.FederatedEvent, options?: { hoverOutOthers?: boolean }): boolean;
 
-    protected _onHoverOut(event: PIXI.InteractionEvent): boolean;
+    protected _onHoverOut(event: PIXI.FederatedEvent): boolean;
 
     /** Handle mouse-hover events on the line segment itself, pulling the Wall to the front of the container stack */
-    protected _onMouseOverLine(event: PIXI.InteractionEvent): void;
+    protected _onMouseOverLine(event: PIXI.FederatedEvent): void;
 
-    protected _onClickLeft(event: PIXI.InteractionEvent): boolean;
+    protected _onClickLeft(event: PIXI.FederatedEvent): boolean;
 
-    protected _onClickLeft2(event: PIXI.InteractionEvent): boolean;
+    protected _onClickLeft2(event: PIXI.FederatedEvent): boolean;
 
-    protected _onClickRight2(event: PIXI.InteractionEvent): boolean;
+    protected _onClickRight2(event: PIXI.FederatedEvent): boolean;
 
-    protected _onDragLeftStart(event: PIXI.InteractionEvent): boolean;
+    protected _onDragLeftStart(event: PIXI.FederatedEvent): boolean;
 
-    protected _onDragLeftMove(event: PIXI.InteractionEvent): void;
+    protected _onDragLeftMove(event: PIXI.FederatedEvent): void;
 
-    protected _onDragLeftDrop(event: PIXI.InteractionEvent): Promise<TDocument[]>;
+    protected _onDragLeftDrop(event: PIXI.FederatedEvent): Promise<TDocument[]>;
 }
 
 declare interface Wall<TDocument extends WallDocument<Scene | null>> extends PlaceableObject<TDocument> {

@@ -1,6 +1,6 @@
-import { UserVisibility } from "@scripts/ui/user-visibility";
-import { DegreeOfSuccessString } from "@system/degree-of-success";
-import { PredicatePF2e, RawPredicate } from "@system/predication";
+import { UserVisibility } from "@scripts/ui/user-visibility.ts";
+import { DegreeOfSuccessString } from "@system/degree-of-success.ts";
+import { PredicatePF2e, RawPredicate } from "@system/predication.ts";
 
 class RollNotePF2e {
     /** The selector used to determine on which rolls the note will be shown for. */
@@ -18,7 +18,7 @@ class RollNotePF2e {
 
     constructor(params: RollNoteSource) {
         this.selector = params.selector;
-        this.predicate = PredicatePF2e.create(params.predicate ?? []);
+        this.predicate = new PredicatePF2e(params.predicate ?? []);
         this.outcome = [...(params.outcome ?? [])];
         this.visibility = params.visibility ?? null;
         this.#title = params.title ?? null;

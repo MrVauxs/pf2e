@@ -1,8 +1,8 @@
 import { sluggify } from "@util";
-import { CompendiumBrowser } from "..";
-import { ContentTabName } from "../data";
-import { CompendiumBrowserTab } from "./base";
-import { BestiaryFilters, CompendiumBrowserIndexData } from "./data";
+import { CompendiumBrowser } from "../index.ts";
+import { ContentTabName } from "../data.ts";
+import { CompendiumBrowserTab } from "./base.ts";
+import { BestiaryFilters, CompendiumBrowserIndexData } from "./data.ts";
 
 export class CompendiumBrowserBestiaryTab extends CompendiumBrowserTab {
     tabName: ContentTabName = "bestiary";
@@ -62,9 +62,9 @@ export class CompendiumBrowserBestiaryTab extends CompendiumBrowserTab {
                     }
                     // Prepare source
                     const source = actorData.system.details.source.value;
+                    const sourceSlug = sluggify(source);
                     if (source) {
                         sources.add(source);
-                        actorData.system.details.source.value = sluggify(source);
                     }
 
                     bestiaryActors.push({
@@ -77,7 +77,7 @@ export class CompendiumBrowserBestiaryTab extends CompendiumBrowserTab {
                         actorSize: actorData.system.traits.size.value,
                         traits: actorData.system.traits.value,
                         rarity: actorData.system.traits.rarity,
-                        source: actorData.system.details.source.value,
+                        source: sourceSlug,
                     });
                 }
             }

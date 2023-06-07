@@ -10,6 +10,10 @@
         flex-wrap: nowrap;
     }
 
+    &.affliction form {
+        @import "affliction-sheet";
+    }
+
     &.deity form {
         @import "deity-sheet";
     }
@@ -67,7 +71,6 @@
 
         .tab {
             flex: 1;
-            overflow: hidden;
         }
 
         .tag-legacy {
@@ -186,16 +189,7 @@
             }
 
             .tab {
-                padding-left: 10px;
-
-                /** Any tab */
-                .editor {
-                    height: 100%;
-                }
-
-                .editor-content {
-                    @include scrollbar;
-                }
+                padding-left: 0.5rem;
 
                 /** Details */
                 &.item-details {
@@ -254,11 +248,15 @@
 
             .item-description {
                 .descriptions {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 3px;
                     height: 100%;
-                    overflow: hidden;
+                    padding: 0 0.25em;
 
-                    .main {
-                        height: 100%;
+                    > * {
+                        display: inherit;
+                        flex-direction: inherit;
                     }
 
                     .gm-notes {
@@ -275,7 +273,15 @@
                         }
                     }
 
+                    .main {
+                        flex-grow: 1;
+                    }
+
                     .editor {
+                        display: inherit;
+                        flex-direction: inherit;
+                        flex-grow: inherit;
+
                         a.add-gm-notes, a.editor-edit {
                             font-size: 1.33em;
                             background: rgb(205, 205, 205);
@@ -300,10 +306,6 @@
                         &:hover a.add-gm-notes {
                             display: block;
                         }
-                    }
-
-                    .main .editor {
-                        min-height: 6em;
                     }
                 }
             }
@@ -370,7 +372,8 @@
             grid-template-columns: 1fr 1fr;
             column-gap: 0.25rem;
             .item-controls {
-                margin: 0;
+                margin-left: 2px;
+                gap: 0;
             }
         }
 
@@ -409,6 +412,11 @@
                 span {
                     font-weight: 400;
                 }
+            }
+
+            input.adjusted-higher:not(:focus) {
+                font-weight: 700;
+                color: $adjusted-higher;
             }
 
             input.adjusted-lower:not(:focus) {

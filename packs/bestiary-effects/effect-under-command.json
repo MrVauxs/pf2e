@@ -1,0 +1,35 @@
+{
+    "_id": "T9wQ1LvsvPWTefQR",
+    "img": "systems/pf2e/icons/spells/call-to-arms.webp",
+    "name": "Effect: Under Command",
+    "system": {
+        "description": {
+            "value": "<p>Commanded by a captain of the guard.</p>"
+        },
+        "duration": {
+            "expiry": "turn-start",
+            "sustained": false,
+            "unit": "unlimited",
+            "value": -1
+        },
+        "level": {
+            "value": 1
+        },
+        "rules": [],
+        "source": {
+            "value": "Pathfinder Gamemastery Guide"
+        },
+        "start": {
+            "initiative": null,
+            "value": 0
+        },
+        "target": null,
+        "tokenIcon": {
+            "show": true
+        },
+        "traits": {
+            "value": []
+        }
+    },
+    "type": "effect"
+}

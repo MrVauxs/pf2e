@@ -1,7 +1,6 @@
-import { PredicatePF2e, PredicateStatement, RawPredicate, StatementValidator } from "@system/predication";
+import { PredicatePF2e, PredicateStatement, RawPredicate, StatementValidator } from "@system/predication.ts";
 import { SlugCamel, sluggify } from "@util";
-import { DataModel } from "types/foundry/common/abstract/data.mjs";
-import {
+import type {
     ArrayFieldOptions,
     CleanFieldOptions,
     DataFieldOptions,
@@ -9,7 +8,7 @@ import {
     MaybeSchemaProp,
     StringField,
     StringFieldOptions,
-} from "types/foundry/common/data/fields.mjs";
+} from "types/foundry/common/data/fields.d.ts";
 
 /* -------------------------------------------- */
 /*  System `DataSchema` `DataField`s            */
@@ -56,7 +55,7 @@ class SlugField<
         value: Maybe<string>,
         options?: CleanFieldOptions
     ): MaybeSchemaProp<string, TRequired, TNullable, THasInitial>;
-    protected override _cleanType(value: Maybe<string>, options?: CleanFieldOptions): string | null | undefined {
+    protected override _cleanType(value: Maybe<string>, options?: CleanFieldOptions): unknown {
         const slug = super._cleanType(value, options);
         const camel = this.options.camel ?? null;
         return typeof slug === "string" ? sluggify(slug, { camel }) : slug;
@@ -111,15 +110,25 @@ class PredicateField<
         super(new PredicateStatementField(), options);
     }
 
+    /** Don't wrap a non-array in an array */
+    protected override _cast(value: unknown): unknown {
+        return value;
+    }
+
+    /** Parent method assumes array-wrapping: pass through unchanged */
+    protected override _cleanType(value: unknown): unknown {
+        return value;
+    }
+
     /** Construct a `PredicatePF2e` from the initialized `PredicateStatement[]` */
     override initialize(
         value: RawPredicate,
-        model: ConstructorOf<DataModel>,
+        model: ConstructorOf<foundry.abstract.DataModel>,
         options?: ArrayFieldOptions<RawPredicate, TRequired, TNullable, THasInitial>
     ): MaybeSchemaProp<PredicatePF2e, TRequired, TNullable, THasInitial>;
     override initialize(
         value: RawPredicate,
-        model: ConstructorOf<DataModel>,
+        model: ConstructorOf<foundry.abstract.DataModel>,
         options: ArrayFieldOptions<RawPredicate, TRequired, TNullable, THasInitial>
     ): PredicatePF2e | null | undefined {
         const statements = super.initialize(value, model, options);

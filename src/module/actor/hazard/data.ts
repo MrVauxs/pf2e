@@ -1,4 +1,4 @@
-import { SaveData } from "@actor/creature/data";
+import { SaveData } from "@actor/creature/data.ts";
 import {
     ActorSystemData,
     ActorSystemSource,
@@ -7,12 +7,13 @@ import {
     ActorTraitsSource,
     ActorAttributesSource,
     ActorHitPoints,
-} from "@actor/data/base";
-import { ActorSizePF2e } from "@actor/data/size";
-import { NPCStrike } from "@actor/npc";
-import { SaveType } from "@actor/types";
-import { Rarity, Size, ZeroToTwo } from "@module/data";
-import { HazardTrait } from "./types";
+} from "@actor/data/base.ts";
+import { ActorSizePF2e } from "@actor/data/size.ts";
+import { NPCStrike } from "@actor/npc/index.ts";
+import { SaveType } from "@actor/types.ts";
+import { Rarity, Size } from "@module/data.ts";
+import { HazardTrait } from "./types.ts";
+import { InitiativeTraceData } from "@actor/initiative.ts";
 
 /** The stored source data of a hazard actor */
 type HazardSource = BaseActorSourcePF2e<"hazard", HazardSystemSource>;
@@ -69,12 +70,8 @@ interface HazardAttributes
     };
     hasHealth: boolean;
     hp: HazardHitPoints;
-    shield?: never;
     hardness: number;
-    initiative: {
-        roll?: undefined;
-        tiebreakPriority: ZeroToTwo;
-    };
+    initiative?: InitiativeTraceData;
     stealth: {
         value: number | null;
         details: string;
@@ -84,6 +81,8 @@ interface HazardAttributes
      * silent until an encounter begins.
      */
     emitsSound: boolean | "encounter";
+
+    shield?: never;
 }
 
 interface HazardDetailsSource {
@@ -93,6 +92,11 @@ interface HazardDetailsSource {
     description?: string;
     reset?: string;
     routine?: string;
+    /** Book source, along with author */
+    source: {
+        value: string;
+        author: string;
+    };
 }
 
 interface HazardDetails extends HazardDetailsSource {

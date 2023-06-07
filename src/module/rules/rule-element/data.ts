@@ -1,6 +1,7 @@
-import { PredicateField, SlugField } from "@system/schema-data-fields";
-import { RawPredicate } from "@system/predication";
-import { BooleanField, NumberField, StringField } from "types/foundry/common/data/fields.mjs";
+import { RawPredicate } from "@system/predication.ts";
+import { PredicateField, SlugField } from "@system/schema-data-fields.ts";
+import { isObject } from "@util";
+import type { BooleanField, NumberField, StringField } from "types/foundry/common/data/fields.d.ts";
 
 type RuleElementSource = {
     key?: unknown;
@@ -19,7 +20,7 @@ type RuleElementSource = {
 
 interface RuleElementData extends RuleElementSource {
     key: string;
-    value?: RuleValue | BracketedValue;
+    value?: RuleValue;
     label: string;
     slug?: string | null;
     predicate?: RawPredicate;
@@ -28,7 +29,7 @@ interface RuleElementData extends RuleElementSource {
     removeUponCreate?: boolean;
 }
 
-type RuleValue = string | number | boolean | object | null;
+type RuleValue = string | number | boolean | object | BracketedValue | null;
 
 interface Bracket<T extends object | number | string> {
     start?: number;
@@ -59,4 +60,36 @@ type RuleElementSchema = {
     requiresInvestment: BooleanField<boolean, boolean, false, true, false>;
 };
 
-export { Bracket, BracketedValue, RuleElementData, RuleElementSchema, RuleElementSource, RuleValue };
+class ResolvableValueField<
+    TRequired extends boolean,
+    TNullable extends boolean,
+    THasInitial extends boolean = false
+> extends foundry.data.fields.DataField<RuleValue, RuleValue, TRequired, TNullable, THasInitial> {
+    protected override _validateType(value: unknown): boolean {
+        return value !== null && ["string", "number", "object", "boolean"].includes(typeof value);
+    }
+
+    /** No casting is applied to this value */
+    protected _cast(value: unknown): unknown {
+        return value;
+    }
+
+    protected override _cleanType(value: RuleValue): RuleValue {
+        if (typeof value === "string") return value.trim();
+        if (isObject<BracketedValue>(value) && Array.isArray(value.brackets)) {
+            value.field ??= "actor|level";
+        }
+
+        return value;
+    }
+}
+
+export {
+    Bracket,
+    BracketedValue,
+    ResolvableValueField,
+    RuleElementData,
+    RuleElementSchema,
+    RuleElementSource,
+    RuleValue,
+};

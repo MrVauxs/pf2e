@@ -21,26 +21,11 @@ const MANDATORY_RANGED_GROUPS = new Set(["bomb", "bow", "firearm", "sling"] as c
 
 const WEAPON_GROUPS = new Set([...MELEE_WEAPON_GROUPS, ...MANDATORY_RANGED_GROUPS] as const);
 
-/** Precious materials that provide effects to strike attack or damage rolls */
-const WEAPON_MATERIAL_EFFECTS = new Set([
-    "abysium",
-    "adamantine",
-    "cold-iron",
-    "djezet",
-    "silver",
-    "mithral",
-    "noqual",
-    "peachwood",
-    "silver",
-    "sisterstone-dusk",
-    "sisterstone-scarlet",
-    "sovereign-steel",
-] as const);
-
 const WEAPON_PROPERTY_RUNE_TYPES = new Set([
     "anarchic",
     "ancestralEchoing",
     "anchoring",
+    "authorized",
     "axiomatic",
     "bane",
     "bloodbane",
@@ -53,6 +38,7 @@ const WEAPON_PROPERTY_RUNE_TYPES = new Set([
     "dancing",
     "demolishing",
     "disrupting",
+    "earthbinding",
     "energizing",
     "extending",
     "fanged",
@@ -118,7 +104,6 @@ export {
     THROWN_RANGES,
     WEAPON_CATEGORIES,
     WEAPON_GROUPS,
-    WEAPON_MATERIAL_EFFECTS,
     WEAPON_PROPERTY_RUNE_TYPES,
     WEAPON_RANGES,
 };

@@ -1,0 +1,975 @@
+{
+    "id": "pf2e",
+    "title": "Pathfinder 2nd Edition",
+    "description": "A community contributed game system for Pathfinder Second Edition",
+    "license": "./LICENSE",
+    "version": "5.0.0-beta1",
+    "compatibility": {
+        "minimum": "11.300",
+        "verified": "11.300",
+        "maximum": "11"
+    },
+    "authors": [
+        {
+            "name": "The PF2e System Developers",
+            "url": "https://github.com/foundryvtt/pf2e",
+            "flags": {}
+        }
+    ],
+    "esmodules": [
+        "vendor.mjs",
+        "pf2e.mjs"
+    ],
+    "scripts": [
+        "greensock/dist/gsap.min.js",
+        "lib/tooltipster.bundle.min.js"
+    ],
+    "styles": [
+        "styles/pf2e.css"
+    ],
+    "packs": [
+        {
+            "name": "abomination-vaults-bestiary",
+            "label": "Abomination Vaults",
+            "path": "packs/abomination-vaults-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "age-of-ashes-bestiary",
+            "label": "Age of Ashes",
+            "path": "packs/age-of-ashes-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "agents-of-edgewatch-bestiary",
+            "label": "Agents of Edgewatch",
+            "path": "packs/agents-of-edgewatch-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "april-fools-bestiary",
+            "label": "April Fool's Bestiary",
+            "path": "packs/april-fools-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "book-of-the-dead-bestiary",
+            "label": "Book of the Dead Bestiary",
+            "path": "packs/book-of-the-dead-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "blood-lords-bestiary",
+            "label": "Blood Lords",
+            "path": "packs/blood-lords-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "blog-bestiary",
+            "label": "Paizo Blog Bestiary",
+            "path": "packs/blog-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "extinction-curse-bestiary",
+            "label": "Extinction Curse",
+            "path": "packs/extinction-curse-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "fall-of-plaguestone-bestiary",
+            "label": "Fall of Plaguestone",
+            "path": "packs/fall-of-plaguestone",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "fists-of-the-ruby-phoenix-bestiary",
+            "label": "Fists of the Ruby Phoenix",
+            "path": "packs/fists-of-the-ruby-phoenix-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "hazards",
+            "label": "Hazards (Rulebooks)",
+            "path": "packs/hazards",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "gatewalkers-bestiary",
+            "label": "Gatewalkers",
+            "path": "packs/gatewalkers-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "lost-omens-impossible-lands-bestiary",
+            "label": "Lost Omens: Impossible Lands",
+            "path": "packs/impossible-lands-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "lost-omens-mwangi-expanse-bestiary",
+            "label": "Lost Omens: Mwangi Expanse",
+            "path": "packs/mwangi-expanse-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "lost-omens-monsters-of-myth-bestiary",
+            "label": "Lost Omens: Monsters of Myth",
+            "path": "packs/monsters-of-myth-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "lost-omens-travel-guide-bestiary",
+            "label": "Lost Omens: Travel Guide",
+            "path": "packs/travel-guide-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "malevolence-bestiary",
+            "label": "Malevolence",
+            "path": "packs/malevolence-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "menace-under-otari-bestiary",
+            "label": "Beginner Box Bestiary",
+            "path": "packs/menace-under-otari-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "npc-gallery",
+            "label": "NPC Gallery",
+            "path": "packs/npc-gallery",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "one-shot-bestiary",
+            "label": "One Shot Unique Bestiary",
+            "path": "packs/one-shot-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "outlaws-of-alkenstar-bestiary",
+            "label": "Outlaws of Alkenstar",
+            "path": "packs/outlaws-of-alkenstar-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "kingmaker-bestiary",
+            "label": "Kingmaker",
+            "path": "packs/kingmaker-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "pathfinder-bestiary",
+            "label": "Bestiary 1",
+            "path": "packs/pathfinder-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "pathfinder-bestiary-2",
+            "label": "Bestiary 2",
+            "path": "packs/pathfinder-bestiary-2",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "pathfinder-bestiary-3",
+            "label": "Bestiary 3",
+            "path": "packs/pathfinder-bestiary-3",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "pathfinder-dark-archive",
+            "label": "Dark Archive Bestiary",
+            "path": "packs/pathfinder-dark-archive",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "pfs-introductions-bestiary",
+            "label": "Introductions",
+            "path": "packs/pfs-introductions-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "pfs-season-1-bestiary",
+            "label": "Season 1",
+            "path": "packs/pfs-season-1-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "pfs-season-2-bestiary",
+            "label": "Season 2",
+            "path": "packs/pfs-season-2-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "pfs-season-3-bestiary",
+            "label": "Season 3",
+            "path": "packs/pfs-season-3-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "pfs-season-4-bestiary",
+            "label": "Season 4",
+            "path": "packs/pfs-season-4-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "quest-for-the-frozen-flame-bestiary",
+            "label": "Quest for the Frozen Flame",
+            "path": "packs/quest-for-the-frozen-flame-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "shadows-at-sundown-bestiary",
+            "label": "Shadows at Sundown",
+            "path": "packs/shadows-at-sundown-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "strength-of-thousands-bestiary",
+            "label": "Strength of Thousands",
+            "path": "packs/strength-of-thousands-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "the-enmity-cycle-bestiary",
+            "label": "The Enmity Cycle",
+            "path": "packs/the-enmity-cycle-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "the-slithering-bestiary",
+            "label": "The Slithering",
+            "path": "packs/the-slithering-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "troubles-in-otari-bestiary",
+            "label": "Troubles in Otari",
+            "path": "packs/troubles-in-otari-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "night-of-the-gray-death-bestiary",
+            "label": "Night of the Gray Death",
+            "path": "packs/night-of-the-gray-death-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "crown-of-the-kobold-king-bestiary",
+            "label": "Crown of the Kobold King",
+            "path": "packs/crown-of-the-kobold-king-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "stolen-fate-bestiary",
+            "label": "Stolen Fate",
+            "path": "packs/stolen-fate-bestiary",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "vehicles",
+            "label": "Vehicles",
+            "path": "packs/vehicles",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "actionspf2e",
+            "label": "Actions",
+            "path": "packs/actions",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "ancestries",
+            "label": "Ancestries",
+            "path": "packs/ancestries",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "ancestryfeatures",
+            "label": "Ancestry Features",
+            "path": "packs/ancestryfeatures",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "backgrounds",
+            "label": "Backgrounds",
+            "path": "packs/backgrounds",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "classes",
+            "label": "Classes",
+            "path": "packs/classes",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "classfeatures",
+            "label": "Class Features",
+            "path": "packs/classfeatures",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "familiar-abilities",
+            "label": "Familiar Abilities",
+            "path": "packs/familiar-abilities",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "feats-srd",
+            "label": "Feats",
+            "path": "packs/feats",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "heritages",
+            "label": "Heritages",
+            "path": "packs/heritages",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "spells-srd",
+            "label": "Spells",
+            "path": "packs/spells",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "bestiary-effects",
+            "label": "Bestiary Effects",
+            "path": "packs/bestiary-effects",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "domains",
+            "label": "Domains",
+            "path": "packs/domains",
+            "type": "JournalEntry",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "boons-and-curses",
+            "label": "Divine Intercessions",
+            "path": "packs/boons-and-curses",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "conditionitems",
+            "label": "Conditions",
+            "path": "packs/conditions",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "campaign-effects",
+            "label": "Campaign Effects",
+            "path": "packs/campaign-effects",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "equipment-effects",
+            "label": "Equipment Effects",
+            "path": "packs/equipment-effects",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "other-effects",
+            "label": "Other Effects",
+            "path": "packs/other-effects",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "feat-effects",
+            "label": "Feat/Feature Effects",
+            "path": "packs/feat-effects",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "pathfinder-society-boons",
+            "label": "Pathfinder Society Boons",
+            "path": "packs/pathfinder-society-boons",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "spell-effects",
+            "label": "Spell Effects",
+            "path": "packs/spell-effects",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "equipment-srd",
+            "label": "Equipment",
+            "path": "packs/equipment",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "deities",
+            "label": "Deities",
+            "path": "packs/deities",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "iconics",
+            "label": "Iconics",
+            "path": "packs/iconics",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "paizo-pregens",
+            "label": "Non-Iconic Pregens",
+            "path": "packs/paizo-pregens",
+            "type": "Actor",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "rollable-tables",
+            "label": "Rollable Tables",
+            "path": "packs/rollable-tables",
+            "type": "RollTable",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "criticaldeck",
+            "label": "Critical Hit/Fumble Deck",
+            "path": "packs/criticaldeck",
+            "type": "JournalEntry",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "hero-point-deck",
+            "label": "Hero Point Deck",
+            "path": "packs/hero-point-deck",
+            "type": "JournalEntry",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "journals",
+            "label": "PF2e Journals",
+            "path": "packs/journals",
+            "type": "JournalEntry",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "gmg-srd",
+            "label": "Game Mastery Guide",
+            "path": "packs/gmg-srd",
+            "type": "JournalEntry",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "action-macros",
+            "label": "Action Macros",
+            "path": "packs/action-macros",
+            "type": "Macro",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "pf2e-macros",
+            "label": "PF2e Macros",
+            "path": "packs/macros",
+            "type": "Macro",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "OBSERVER",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "bestiary-ability-glossary-srd",
+            "label": "Bestiary Ability Glossary",
+            "path": "packs/bestiary-ability-glossary-srd",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "bestiary-family-ability-glossary",
+            "label": "Creature Family Ability Glossary",
+            "path": "packs/bestiary-family-ability-glossary",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        },
+        {
+            "name": "adventure-specific-actions",
+            "label": "Adventure-Specific Actions",
+            "path": "packs/adventure-specific-actions",
+            "type": "Item",
+            "system": "pf2e",
+            "ownership": {
+                "PLAYER": "LIMITED",
+                "ASSISTANT": "OWNER"
+            },
+            "flags": {}
+        }
+    ],
+    "packFolders": [
+        {
+            "name": "Pathfinder Society",
+            "sorting": "m",
+            "packs": [
+                "pfs-introductions-bestiary",
+                "pfs-season-1-bestiary",
+                "pfs-season-2-bestiary",
+                "pfs-season-3-bestiary",
+                "pfs-season-4-bestiary"
+            ]
+        }
+    ],
+    "languages": [
+        {
+            "lang": "en",
+            "name": "Main (English)",
+            "path": "lang/en.json",
+            "flags": {}
+        },
+        {
+            "lang": "en",
+            "name": "Actions (English)",
+            "path": "lang/action-en.json",
+            "flags": {}
+        },
+        {
+            "lang": "en",
+            "name": "Rules Elements (English)",
+            "path": "lang/re-en.json",
+            "flags": {}
+        }
+    ],
+    "socket": true,
+    "initiative": "1d20 + @attributes.perception.value + (@abilities.wis.value / 100)",
+    "gridDistance": 5,
+    "gridUnits": "ft",
+    "primaryTokenAttribute": "attributes.hp",
+    "url": "https://github.com/foundryvtt/pf2e",
+    "bugs": "https://github.com/foundryvtt/pf2e/issues",
+    "changelog": "https://github.com/foundryvtt/pf2e/blob/release/CHANGELOG.md",
+    "manifest": "https://github.com/foundryvtt/pf2e/releases/latest/download/system.json",
+    "download": "https://github.com/foundryvtt/pf2e/releases/latest/download/pf2e.zip"
+}

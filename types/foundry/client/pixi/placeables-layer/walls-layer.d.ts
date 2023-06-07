@@ -25,7 +25,7 @@ declare global {
         protected _forceSnap: boolean;
 
         /** Track the most recently created or updated wall data for use with the clone tool */
-        protected _cloneType: foundry.data.WallSource;
+        protected _cloneType: foundry.documents.WallSource;
 
         /** Reference the last interacted wall endpoint for the purposes of chaining */
         last: { id: string | null; point: PointArray };
@@ -83,23 +83,6 @@ declare global {
         ): PointArray[];
 
         /**
-         * Test whether movement along a given Ray collides with a Wall.
-         * @param ray                             The attempted movement
-         * @param [options={}]                 Options which customize how collision is tested
-         * @param [options.type=movement]        Which collision type to check: movement, sight, sound
-         * @param [options.mode=any]             Which type of collisions are returned: any, closest, all
-         * @returns Does a collision occur along the tested Ray?
-         */
-        checkCollision(ray: Ray, { type, mode }: { type?: WallRestrictionType; mode: "closest" }): PolygonVertex;
-        checkCollision(ray: Ray, { type, mode }: { type?: WallRestrictionType; mode: "any" }): boolean;
-        checkCollision(ray: Ray, { type, mode }: { type?: WallRestrictionType; mode: "all" }): PolygonVertex[];
-        checkCollision(ray: Ray, { type, mode }?: { type?: WallRestrictionType; mode?: undefined }): PolygonVertex[];
-        checkCollision(
-            ray: Ray,
-            { type, mode }?: { type?: WallRestrictionType; mode?: WallMode }
-        ): boolean | PolygonVertex | PolygonVertex[];
-
-        /**
          * Highlight the endpoints of Wall segments which are currently group-controlled on the Walls layer
          */
         highlightControlledSegments(): void;
@@ -133,21 +116,21 @@ declare global {
          * This method helps to translate each tool into a default wall data configuration for that type
          * @param tool The active canvas tool
          */
-        protected _getWallDataFromActiveTool(tool: string): Partial<foundry.data.WallSource>;
+        protected _getWallDataFromActiveTool(tool: string): Partial<foundry.documents.WallSource>;
 
         /* -------------------------------------------- */
         /*  Event Listeners and Handlers                */
         /* -------------------------------------------- */
 
-        protected override _onClickLeft(event: PIXI.InteractionEvent): void;
+        protected override _onClickLeft(event: PIXI.FederatedEvent): void;
 
-        protected override _onDragLeftStart(event: PIXI.InteractionEvent): Promise<void>;
+        protected override _onDragLeftStart(event: PIXI.FederatedEvent): Promise<void>;
 
-        protected override _onDragLeftMove(event: PIXI.InteractionEvent): Promise<void>;
+        protected override _onDragLeftMove(event: PIXI.FederatedEvent): Promise<void>;
 
-        protected override _onDragLeftCancel(event: PIXI.InteractionEvent): void;
+        protected override _onDragLeftCancel(event: PIXI.FederatedEvent): void;
 
-        protected override _onClickRight(event: PIXI.InteractionEvent): void;
+        protected override _onClickRight(event: PIXI.FederatedEvent): void;
 
         /* -------------------------------------------- */
         /*  Source Polygon Computation                  */

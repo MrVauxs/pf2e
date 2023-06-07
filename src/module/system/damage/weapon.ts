@@ -1,41 +1,41 @@
 import { ActorPF2e, CharacterPF2e, HazardPF2e, NPCPF2e } from "@actor";
-import { TraitViewData } from "@actor/data/base";
+import { TraitViewData } from "@actor/data/base.ts";
 import {
     DamageDiceOverride,
     DamageDicePF2e,
     DiceModifierPF2e,
     ModifierPF2e,
-    MODIFIER_TYPE,
     PROFICIENCY_RANK_OPTION,
     StatisticModifier,
-} from "@actor/modifiers";
-import { AbilityString } from "@actor/types";
+} from "@actor/modifiers.ts";
+import { AbilityString } from "@actor/types.ts";
 import { MeleePF2e, WeaponPF2e } from "@item";
-import { NPCAttackDamage } from "@item/melee/data";
-import { getPropertyRuneAdjustments, getPropertyRuneDice } from "@item/physical/runes";
-import { WeaponDamage } from "@item/weapon/data";
-import { RollNotePF2e } from "@module/notes";
-import { CritSpecEffect, PotencySynthetic, StrikingSynthetic } from "@module/rules/synthetics";
+import { NPCAttackDamage } from "@item/melee/data.ts";
+import { getPropertyRuneAdjustments, getPropertyRuneDice } from "@item/physical/runes.ts";
+import { WeaponDamage } from "@item/weapon/data.ts";
+import { RollNotePF2e } from "@module/notes.ts";
 import {
     extractDamageDice,
     extractDamageModifiers,
     extractModifierAdjustments,
     extractModifiers,
     extractNotes,
-} from "@module/rules/helpers";
-import { DegreeOfSuccessIndex, DEGREE_OF_SUCCESS } from "@system/degree-of-success";
+} from "@module/rules/helpers.ts";
+import { CritSpecEffect, PotencySynthetic, StrikingSynthetic } from "@module/rules/synthetics.ts";
+import { DEGREE_OF_SUCCESS, DegreeOfSuccessIndex } from "@system/degree-of-success.ts";
 import { mapValues, objectHasKey, sluggify } from "@util";
-import { createDamageFormula, AssembledFormula } from "./formula";
-import { nextDamageDieSize } from "./helpers";
+import { AssembledFormula, createDamageFormula, parseTermsFromSimpleFormula } from "./formula.ts";
+import { nextDamageDieSize } from "./helpers.ts";
+import { DamageModifierDialog } from "./modifier-dialog.ts";
 import {
     DamageCategoryUnique,
     DamageDieSize,
-    DamageFormulaData,
     DamageRollContext,
     MaterialDamageEffect,
+    WeaponBaseDamageData,
+    WeaponDamageFormulaData,
     WeaponDamageTemplate,
-} from "./types";
-import { DamageModifierDialog } from "./modifier-dialog";
+} from "./types.ts";
 
 class WeaponDamagePF2e {
     static async fromNPCAttack({
@@ -108,7 +108,7 @@ class WeaponDamagePF2e {
         const { options } = context;
         if (baseDamage.die === null && baseDamage.modifier > 0) {
             baseDamage.dice = 0;
-        } else if (baseDamage.dice === 0 && baseDamage.modifier === 0) {
+        } else if (!weapon.dealsDamage) {
             return null;
         }
 
@@ -150,7 +150,7 @@ class WeaponDamagePF2e {
                     label: CONFIG.PF2E.abilities.str,
                     ability: "str",
                     modifier: modifierValue,
-                    type: MODIFIER_TYPE.ABILITY,
+                    type: "ability",
                     adjustments: extractModifierAdjustments(actor.synthetics.modifierAdjustments, baseDomains, "str"),
                 });
                 modifiers.push(strModifier);
@@ -465,7 +465,7 @@ class WeaponDamagePF2e {
             adjustment.adjustDamageRoll?.(weapon, { materials });
         }
 
-        for (const option of Array.from(materials).map((m) => `weapon:material:${m}`)) {
+        for (const option of Array.from(materials).map((m) => `item:material:${m}`)) {
             options.add(option);
         }
 
@@ -483,6 +483,15 @@ class WeaponDamagePF2e {
             ...new StatisticModifier("strike-persistent", synthetics.persistent, options).modifiers,
         ];
 
+        const base: WeaponBaseDamageData = {
+            diceNumber: baseDamage.die ? baseDamage.dice : 0,
+            dieSize: baseDamage.die,
+            modifier: baseDamage.modifier,
+            damageType: baseDamage.damageType,
+            category: "category" in baseDamage && baseDamage.category === "persistent" ? "persistent" : null,
+            materials: Array.from(materials),
+        };
+
         // Damage dice from synthetics
         damageDice.push(
             ...extractDamageDice(actor.synthetics.damageDice, selectors, {
@@ -492,15 +501,8 @@ class WeaponDamagePF2e {
             })
         );
 
-        const damage: DamageFormulaData = {
-            base: {
-                diceNumber: baseDamage.die ? baseDamage.dice : 0,
-                dieSize: baseDamage.die,
-                modifier: baseDamage.modifier,
-                damageType: baseDamage.damageType,
-                category: "category" in baseDamage && baseDamage.category === "persistent" ? "persistent" : null,
-                materials: Array.from(materials),
-            },
+        const damage: WeaponDamageFormulaData = {
+            base: [base],
             // CRB p. 279, Counting Damage Dice: Effects based on a weapon's number of damage dice include
             // only the weapon's damage die plus any extra dice from a striking rune. They don't count
             // extra dice from abilities, critical specialization effects, property runes, weapon traits,
@@ -510,40 +512,17 @@ class WeaponDamagePF2e {
             ignoredResistances,
         };
 
-        // include dice number and size in damage tag
-        for (const dice of damage.dice) {
-            dice.label = game.i18n.localize(dice.label ?? dice.slug);
-            if (dice.diceNumber > 0 && dice.dieSize) {
-                dice.label += ` +${dice.diceNumber}${dice.dieSize}`;
-            } else if (damage.base.dieSize && dice.diceNumber > 0) {
-                dice.label += ` +${dice.diceNumber}${damage.base.dieSize}`;
-            } else if (dice.dieSize) {
-                dice.label += ` ${dice.dieSize}`;
-            }
-            if (
-                dice.category &&
-                dice.category !== "persistent" &&
-                (dice.diceNumber > 0 || dice.dieSize) &&
-                (!dice.damageType ||
-                    (dice.damageType === damage.base.damageType && dice.category !== damage.base.category))
-            ) {
-                dice.label += ` ${dice.category}`;
-            }
-            dice.enabled = dice.predicate.test(options);
-            dice.ignored = !dice.enabled;
+        // If a weapon deals no base damage, remove all bonuses, penalties, and modifiers to it.
+        if (!(damage.base[0].diceNumber || damage.base[0].modifier)) {
+            damage.dice = damage.dice.filter((d) => ![null, "precision"].includes(d.category));
+            damage.modifiers = damage.modifiers.filter((m) => ![null, "precision"].includes(m.category));
         }
 
         const excludeFrom = weapon.isOfType("weapon") ? weapon : null;
         this.#excludeDamage({ actor, weapon: excludeFrom, modifiers: [...modifiers, ...damageDice], options });
 
         if (BUILD_MODE === "development" && !context.skipDialog) {
-            const rolled = await new DamageModifierDialog({
-                modifiers: damage.modifiers,
-                dice: damage.dice,
-                context,
-                baseDamageType: baseDamage.damageType,
-            }).resolve();
-
+            const rolled = await new DamageModifierDialog({ damage, context }).resolve();
             if (!rolled) return null;
         }
 
@@ -571,15 +550,16 @@ class WeaponDamagePF2e {
 
     /** Apply damage dice overrides and create a damage formula */
     static #finalizeDamage(
-        damage: DamageFormulaData,
+        damage: WeaponDamageFormulaData,
         degree: (typeof DEGREE_OF_SUCCESS)["SUCCESS" | "CRITICAL_SUCCESS"]
     ): AssembledFormula;
-    static #finalizeDamage(damage: DamageFormulaData, degree: typeof DEGREE_OF_SUCCESS.CRITICAL_FAILURE): null;
-    static #finalizeDamage(damage: DamageFormulaData, degree?: DegreeOfSuccessIndex): AssembledFormula | null;
-    static #finalizeDamage(damage: DamageFormulaData, degree: DegreeOfSuccessIndex): AssembledFormula | null {
+    static #finalizeDamage(damage: WeaponDamageFormulaData, degree: typeof DEGREE_OF_SUCCESS.CRITICAL_FAILURE): null;
+    static #finalizeDamage(damage: WeaponDamageFormulaData, degree?: DegreeOfSuccessIndex): AssembledFormula | null;
+    static #finalizeDamage(damage: WeaponDamageFormulaData, degree: DegreeOfSuccessIndex): AssembledFormula | null {
         damage = deepClone(damage);
-        const { base } = damage;
+        const base = damage.base.at(0);
         const critical = degree === DEGREE_OF_SUCCESS.CRITICAL_SUCCESS;
+        if (!base) return null;
 
         // Test that a damage modifier is compatible with the prior check result
         const outcomeMatches = (m: { critical: boolean | null }): boolean =>
@@ -683,30 +663,15 @@ class WeaponDamagePF2e {
 
     /** Parse damage formulas from melee items and construct `WeaponDamage` objects out of them */
     static npcDamageToWeaponDamage(instance: NPCAttackDamage): ConvertedNPCDamage {
-        const roll = new Roll(instance.damage);
-        const die = roll.dice.at(0);
-        const operator = ((): ArithmeticOperator => {
-            const operators = roll.terms.filter((t): t is OperatorTerm => t instanceof OperatorTerm);
-            if (operators.length === 1) {
-                // Simplest case: a single operator
-                return operators.at(0)?.operator ?? "+";
-            } else if (operators.length === 2) {
-                // A plus and minus?
-                const [first, second] = operators;
-                if (first.operator !== second.operator && operators.every((o) => ["+", "-"].includes(o.operator))) {
-                    return "-";
-                }
-            }
-
-            // Don't handle cases other than the above
-            return "+";
-        })();
-        const modifier = roll.terms.find((t): t is NumericTerm => t instanceof NumericTerm)?.number ?? 0;
+        // Despite it being a string formula, melee items only support a single dice and modifier term
+        const terms = parseTermsFromSimpleFormula(instance.damage);
+        const die = terms.find((t) => t.dice)?.dice;
+        const modifier = terms.find((t) => t.modifier)?.modifier ?? 0;
 
         return {
             dice: die?.number ?? 0,
             die: die?.faces ? (`d${die.faces}` as DamageDieSize) : null,
-            modifier: operator === "+" ? modifier : -1 * modifier,
+            modifier,
             damageType: instance.damageType,
             persistent: null,
             category: instance.category,

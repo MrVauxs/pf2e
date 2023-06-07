@@ -5,9 +5,7 @@ declare global {
      * An Abstract Base Class which defines a Placeable Object which represents an Entity placed on the Canvas
      * @param document The Document instance which is represented by this object
      */
-    abstract class PlaceableObject<
-        TDocument extends CanvasDocument | CanvasDocument2 = CanvasDocument | CanvasDocument2
-    > extends PIXI.Container {
+    abstract class PlaceableObject<TDocument extends CanvasDocument = CanvasDocument> extends PIXI.Container {
         constructor(document: TDocument);
 
         /** Retain a reference to the Scene within which this Placeable Object resides */
@@ -20,7 +18,7 @@ declare global {
          * Track the field of vision for the placeable object.
          * This is necessary to determine whether a player has line-of-sight towards a placeable object or vice-versa
          */
-        vision: { fov: unknown; los: unknown };
+        vision: { fov: unknown; shape: unknown };
 
         /** A control icon for interacting with the object */
         controlIcon: ControlIcon;
@@ -93,31 +91,31 @@ declare global {
         can(user: User, action: UserAction): boolean;
 
         /** Can the User access the HUD for this Placeable Object? */
-        protected _canHUD(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected _canHUD(user: User, event?: PIXI.FederatedEvent): boolean;
 
         /** Does the User have permission to configure the Placeable Object? */
-        protected _canConfigure(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected _canConfigure(user: User, event?: PIXI.FederatedEvent): boolean;
 
         /** Does the User have permission to control the Placeable Object? */
-        protected _canControl(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected _canControl(user: User, event?: PIXI.FederatedEvent): boolean;
 
         /** Does the User have permission to view details of the Placeable Object? */
-        protected _canView(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected _canView(user: User, event?: PIXI.FederatedEvent): boolean;
 
         /** Does the User have permission to create the underlying Embedded Entity? */
-        protected _canCreate(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected _canCreate(user: User, event?: PIXI.FederatedEvent): boolean;
 
         /** Does the User have permission to drag this Placeable Object? */
-        protected _canDrag(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected _canDrag(user: User, event?: PIXI.FederatedEvent): boolean;
 
         /** Does the User have permission to hover on this Placeable Object? */
-        protected _canHover(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected _canHover(user: User, event?: PIXI.FederatedEvent): boolean;
 
         /** Does the User have permission to update the underlying Embedded Entity? */
-        protected _canUpdate(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected _canUpdate(user: User, event?: PIXI.FederatedEvent): boolean;
 
         /** Does the User have permission to delete the underlying Embedded Entity? */
-        protected _canDelete(user: User, event?: PIXI.InteractionEvent): boolean;
+        protected _canDelete(user: User, event?: PIXI.FederatedEvent): boolean;
 
         /* -------------------------------------------- */
         /*  Rendering                                   */
@@ -158,18 +156,30 @@ declare global {
          */
         refresh(): this;
 
+        /**
+         * The inner _refresh method which must be defined by each PlaceableObject subclass.
+         * @param options Options which may modify the refresh workflow
+         */
+        protected abstract _refresh(options: object): void;
+
         /** Register pending canvas operations which should occur after a new PlaceableObject of this type is created */
-        _onCreate(data: TDocument["_source"], options: DocumentModificationContext<TDocument>, userId: string): void;
+        protected _onCreate(
+            data: TDocument["_source"],
+            options: DocumentModificationContext<TDocument["parent"]>,
+            userId: string
+        ): void;
 
         /** Define additional steps taken when an existing placeable object of this type is updated with new data */
-        _onUpdate(
-            changed: DocumentUpdateData<TDocument>,
-            options: DocumentModificationContext<TDocument>,
+
+        protected _onUpdate(
+            changed: DeepPartial<TDocument["_source"]>,
+            options: DocumentUpdateContext<TDocument["parent"]>,
             userId: string
         ): void;
 
         /** Define additional steps taken when an existing placeable object of this type is deleted */
-        _onDelete(options: DocumentModificationContext<TDocument>, userId: string): void;
+
+        protected _onDelete(options: DocumentModificationContext<TDocument["parent"]>, userId: string): void;
 
         /* -------------------------------------------- */
         /*  Methods                                     */
@@ -238,21 +248,21 @@ declare global {
 
         /** Actions that should be taken for this Placeable Object when a mouseover event occurs */
         protected _onHoverIn(
-            event: PIXI.InteractionEvent,
+            event: PIXI.FederatedEvent,
             { hoverOutOthers }?: { hoverOutOthers?: boolean }
         ): boolean | void;
 
         /** Actions that should be taken for this Placeable Object when a mouseout event occurs */
-        protected _onHoverOut(event: PIXI.InteractionEvent): boolean | void;
+        protected _onHoverOut(event: PIXI.FederatedEvent): boolean | void;
 
         /** Callback actions which occur on a single left-click event to assume control of the object */
-        protected _onClickLeft(event: PIXI.InteractionEvent): boolean | void;
+        protected _onClickLeft(event: PIXI.FederatedEvent): boolean | void;
 
         /** Callback actions which occur on a double left-click event to activate */
-        protected _onClickLeft2(event: PIXI.InteractionEvent): boolean | void;
+        protected _onClickLeft2(event: PIXI.FederatedEvent): boolean | void;
 
         /** Callback actions which occur on a single right-click event to configure properties of the object */
-        protected _onClickRight(event: PIXI.InteractionEvent): void;
+        protected _onClickRight(event: PIXI.FederatedEvent): void;
 
         /**
          * Handle mouse-wheel events at the PlaceableObjects layer level to rotate multiple objects at once.
@@ -262,10 +272,10 @@ declare global {
         protected _onMouseWheel(event: WheelEvent): void;
 
         /** Callback actions which occur on a double right-click event to configure properties of the object */
-        protected _onClickRight2(event: PIXI.InteractionEvent): void;
+        protected _onClickRight2(event: PIXI.FederatedEvent): void;
 
         /** Callback actions which occur when a mouse-drag action is first begun. */
-        protected _onDragLeftStart(event: PIXI.InteractionEvent): void;
+        protected _onDragLeftStart(event: PIXI.FederatedEvent): void;
 
         /**
          * Begin a drag operation from the perspective of the preview clone.
@@ -280,17 +290,16 @@ declare global {
         protected _onDragEnd(): void;
 
         /** Callback actions which occur on a mouse-move operation. */
-        protected _onDragLeftMove(event: PIXI.InteractionEvent): void;
+        protected _onDragLeftMove(event: PIXI.FederatedEvent): void;
 
         /** Callback actions which occur on a mouse-move operation. */
-        protected _onDragLeftDrop(event: PIXI.InteractionEvent): Promise<this["document"][]>;
+        protected _onDragLeftDrop(event: PIXI.FederatedEvent): Promise<this["document"][]>;
 
         /** Callback actions which occur on a mouse-move operation. */
-        protected _onDragLeftCancel(event: PIXI.InteractionEvent): void;
+        protected _onDragLeftCancel(event: PIXI.FederatedEvent): void;
     }
 
-    interface PlaceableObject<TDocument extends CanvasDocument | CanvasDocument2 = CanvasDocument | CanvasDocument2>
-        extends PIXI.Container {
+    interface PlaceableObject<TDocument extends CanvasDocument = CanvasDocument> extends PIXI.Container {
         hitArea: PIXI.Rectangle;
     }
 }

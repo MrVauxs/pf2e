@@ -1,8 +1,8 @@
 import { sluggify } from "@util";
-import { CompendiumBrowser } from "..";
-import { ContentTabName } from "../data";
-import { CompendiumBrowserTab } from "./base";
-import { CompendiumBrowserIndexData, HazardFilters } from "./data";
+import { CompendiumBrowser } from "../index.ts";
+import { ContentTabName } from "../data.ts";
+import { CompendiumBrowserTab } from "./base.ts";
+import { CompendiumBrowserIndexData, HazardFilters } from "./data.ts";
 
 export class CompendiumBrowserHazardTab extends CompendiumBrowserTab {
     tabName: ContentTabName = "hazard";
@@ -45,9 +45,9 @@ export class CompendiumBrowserHazardTab extends CompendiumBrowserTab {
                     }
                     // Prepare source
                     const source = actorData.system.details.source?.value;
+                    const sourceSlug = sluggify(source);
                     if (source) {
                         sources.add(source);
-                        actorData.system.details.source.value = sluggify(source);
                     } else {
                         actorData.system.details.source = { value: "" };
                     }
@@ -61,7 +61,7 @@ export class CompendiumBrowserHazardTab extends CompendiumBrowserTab {
                         complexity: actorData.system.details.isComplex ? "complex" : "simple",
                         traits: actorData.system.traits.value,
                         rarity: actorData.system.traits.rarity,
-                        source: actorData.system.details.source.value,
+                        source: sourceSlug,
                     });
                 }
             }

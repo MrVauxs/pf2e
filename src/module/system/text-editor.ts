@@ -1,16 +1,16 @@
 import { ActorPF2e } from "@actor";
-import { ModifierPF2e } from "@actor/modifiers";
-import { ActorSheetPF2e } from "@actor/sheet/base";
-import { SKILL_DICTIONARY, SKILL_EXPANDED } from "@actor/values";
+import { ModifierPF2e } from "@actor/modifiers.ts";
+import { ActorSheetPF2e } from "@actor/sheet/base.ts";
+import { SKILL_DICTIONARY, SKILL_EXPANDED } from "@actor/values.ts";
 import { ItemPF2e, ItemSheetPF2e } from "@item";
-import { ItemSystemData } from "@item/data/base";
-import { ChatMessagePF2e } from "@module/chat-message";
-import { extractModifierAdjustments, extractModifiers } from "@module/rules/helpers";
-import { UserVisibility, UserVisibilityPF2e } from "@scripts/ui/user-visibility";
+import { ItemSystemData } from "@item/data/base.ts";
+import { ChatMessagePF2e } from "@module/chat-message/index.ts";
+import { extractModifierAdjustments, extractModifiers } from "@module/rules/helpers.ts";
+import { UserVisibility, UserVisibilityPF2e } from "@scripts/ui/user-visibility.ts";
 import { htmlClosest, objectHasKey, sluggify } from "@util";
-import { damageDiceIcon, looksLikeDamageFormula } from "./damage/helpers";
-import { DamageRoll } from "./damage/roll";
-import { Statistic } from "./statistic";
+import { damageDiceIcon, looksLikeDamageRoll } from "./damage/helpers.ts";
+import { DamageRoll } from "./damage/roll.ts";
+import { Statistic } from "./statistic/index.ts";
 
 const superEnrichHTML = TextEditor.enrichHTML;
 const superCreateInlineRoll = TextEditor._createInlineRoll;
@@ -49,7 +49,7 @@ class TextEditorPF2e extends TextEditor {
     ): Promise<HTMLAnchorElement | null> {
         const anchor = await superCreateInlineRoll.apply(this, [match, rollData, options]);
         const formula = anchor?.dataset.formula;
-        if (formula && looksLikeDamageFormula(formula)) {
+        if (formula) {
             const roll = ((): DamageRoll | null => {
                 try {
                     return new DamageRoll(formula);
@@ -57,7 +57,10 @@ class TextEditorPF2e extends TextEditor {
                     return null;
                 }
             })();
-            if (!roll) return null;
+            // Consider any roll formula with d20s or coins to definitely not be a damage roll
+            if (!roll || !looksLikeDamageRoll(roll)) {
+                return anchor;
+            }
 
             // Replace the die icon with one representing the damage roll's first damage die
             const icon = damageDiceIcon(roll);
@@ -263,7 +266,7 @@ class TextEditorPF2e extends TextEditor {
         inlineLabel?: string;
         item?: ItemPF2e | null;
         actor?: ActorPF2e | null;
-    }): HTMLSpanElement | null {
+    }): HTMLElement | null {
         // Parse the parameter string
         const parts = paramString.split("|");
         const params: { type: string; dc: string } & Record<string, string> = { type: "", dc: "" };
@@ -317,6 +320,62 @@ class TextEditorPF2e extends TextEditor {
         // Deduplicate traits
         const allTraits = Array.from(new Set(traits));
 
+        const types = params.type.split(",");
+        let adjustments = params.adjustment?.split(",") ?? ["0"];
+
+        if (types.length !== adjustments.length && adjustments.length > 1) {
+            ui.notifications.warn(game.i18n.localize("PF2E.InlineCheck.Errors.AdjustmentLengthMismatch"));
+            return null;
+        } else if (types.length > adjustments.length) {
+            adjustments = new Array(types.length).fill(adjustments[0]);
+        }
+
+        if (adjustments.some((adj) => adj !== "" && isNaN(parseInt(adj)))) {
+            ui.notifications.warn(game.i18n.localize("PF2E.InlineCheck.Errors.NonIntegerAdjustment"));
+            return null;
+        }
+
+        const buttons = types.map((type, i) =>
+            this.#createSingleCheck({
+                allTraits,
+                actor,
+                item,
+                inlineLabel,
+                params: { ...params, ...{ type, adjustment: adjustments[i] || "0" } },
+            })
+        );
+        if (buttons.length === 1) {
+            return buttons[0];
+        } else {
+            const checkGroup = document.createElement("div");
+            checkGroup.setAttribute("data-pf2-checkgroup", "");
+            for (const button of buttons) {
+                if (button === null) {
+                    // Warning should have been displayed already by #createSingleCheck
+                    return null;
+                }
+                if (checkGroup.hasChildNodes()) {
+                    checkGroup.appendChild(document.createElement("br"));
+                }
+                checkGroup.appendChild(button);
+            }
+            return checkGroup;
+        }
+    }
+
+    static #createSingleCheck({
+        params,
+        allTraits,
+        item,
+        actor,
+        inlineLabel,
+    }: {
+        params: { type: string; dc: string } & Record<string, string>;
+        allTraits: string[];
+        item?: ItemPF2e | null;
+        actor?: ActorPF2e | null;
+        inlineLabel?: string;
+    }): HTMLSpanElement | null {
         // Build the inline link
         const html = document.createElement("span");
         html.setAttribute("data-pf2-traits", `${allTraits}`);
@@ -367,7 +426,7 @@ class TextEditorPF2e extends TextEditor {
                           })
                           .join(" ");
                 html.innerHTML = inlineLabel ?? skillLabel;
-                html.setAttribute("data-pf2-check", params.type);
+                html.dataset.pf2Check = sluggify(params.type);
             }
         }
 
@@ -375,9 +434,14 @@ class TextEditorPF2e extends TextEditor {
             // Let the inline roll function handle level base DCs
             const checkDC = params.dc === "@self.level" ? params.dc : getCheckDC({ name, params, item, actor });
             html.setAttribute("data-pf2-dc", checkDC);
+
+            // When using fixed DCs/adjustments, parse and add them to render the real DC
+            const displayedDC = !isNaN(parseInt(params.dc))
+                ? `${parseInt(params.dc) + parseInt(params.adjustment)}`
+                : checkDC;
             const text = html.innerHTML;
             if (checkDC !== "@self.level") {
-                html.innerHTML = game.i18n.format("PF2E.DCWithValueAndVisibility", { role, dc: checkDC, text });
+                html.innerHTML = game.i18n.format("PF2E.DCWithValueAndVisibility", { role, dc: displayedDC, text });
             }
         }
         return html;

@@ -1,11 +1,11 @@
-import { CharacterPF2e, NPCPF2e } from "@actor";
-import { DamageDiceOverride, DamageDicePF2e, DeferredValueParams } from "@actor/modifiers";
+import { ActorPF2e, CharacterPF2e, NPCPF2e } from "@actor";
+import { DamageDiceOverride, DamageDicePF2e, DeferredValueParams } from "@actor/modifiers.ts";
 import { ItemPF2e } from "@item";
-import { CriticalInclusion, DamageDieSize } from "@system/damage/types";
-import { DAMAGE_DIE_FACES } from "@system/damage/values";
+import { CriticalInclusion, DamageDieSize } from "@system/damage/types.ts";
+import { DAMAGE_DIE_FACES } from "@system/damage/values.ts";
 import { isObject, objectHasKey, setHasElement, sluggify, tupleHasValue } from "@util";
-import { RuleElementData, RuleElementPF2e } from "./";
-import { BracketedValue, RuleElementSource } from "./data";
+import { BracketedValue, RuleElementSource } from "./data.ts";
+import { RuleElementData, RuleElementPF2e } from "./index.ts";
 
 class DamageDiceRuleElement extends RuleElementPF2e {
     override slug: string;
@@ -26,7 +26,7 @@ class DamageDiceRuleElement extends RuleElementPF2e {
 
     override: DamageDiceOverride | null;
 
-    constructor(data: DamageDiceSource, item: Embedded<ItemPF2e>) {
+    constructor(data: DamageDiceSource, item: ItemPF2e<ActorPF2e>) {
         super(data, item);
 
         if (typeof data.selector === "string" && data.selector.length > 0) {
@@ -79,7 +79,8 @@ class DamageDiceRuleElement extends RuleElementPF2e {
         } else {
             this.failValidation(
                 "The override property must be an object with one property of `upgrade` (boolean),",
-                "`downgrade (boolean)`, `dieSize` (d6-d12), or `damageType` (recognized damage type)"
+                "`downgrade (boolean)`, `diceNumber` (integer between 0 and 10), `dieSize` (d6-d12), or `damageType`",
+                "(recognized damage type)"
             );
             this.override = null;
         }
@@ -91,11 +92,7 @@ class DamageDiceRuleElement extends RuleElementPF2e {
         const selector = this.resolveInjectedProperties(this.selector);
 
         const deferredDice = (params: DeferredValueParams = {}): DamageDicePF2e | null => {
-            // In English (and in other languages when the same general form is used), labels patterned as
-            // "Title: Subtitle (Parenthetical)" will be reduced to "Subtitle"
-            // e.g., "Spell Effect: Ooze Form (Gelatinous Cube)" will become "Ooze Form"
-            const label = this.label.replace(/^[^:]+:\s*|\s*\([^)]+\)$/g, "");
-
+            const label = this.getReducedLabel();
             const diceNumber = Number(this.resolveValue(this.diceNumber, 0, { resolvables: params.resolvables })) || 0;
 
             const resolvedBrackets = this.resolveValue(this.brackets, {}, { resolvables: params.resolvables });
@@ -162,7 +159,7 @@ class DamageDiceRuleElement extends RuleElementPF2e {
                 typeof override.dieSize === "string" ||
                 (typeof override.diceNumber === "number" &&
                     Number.isInteger(override.diceNumber) &&
-                    override.diceNumber > 0 &&
+                    override.diceNumber >= 0 &&
                     override.diceNumber <= 10))
         );
     }

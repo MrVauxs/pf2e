@@ -6,8 +6,8 @@ import {
     ItemSystemData,
     ItemSystemSource,
     ItemTraits,
-} from "@item/data/base";
-import { OneToThree } from "@module/data";
+} from "@item/data/base.ts";
+import { OneToThree } from "@module/data.ts";
 
 type ActionItemSource = BaseItemSourcePF2e<"action", ActionSystemSource>;
 
@@ -21,12 +21,10 @@ interface ActionSystemSource extends ItemSystemSource {
     actionType: {
         value: ActionType;
     };
-    actionCategory: {
-        value: string;
-    };
     actions: {
         value: OneToThree | null;
     };
+    category: ActionCategory | null;
     requirements: {
         value: string;
     };
@@ -42,4 +40,6 @@ interface ActionSystemData extends ActionSystemSource, Omit<ItemSystemData, "lev
     frequency?: Frequency;
 }
 
-export { ActionItemSource, ActionSystemData, ActionTrait, ActionTraits };
+type ActionCategory = keyof ConfigPF2e["PF2E"]["actionCategories"];
+
+export { ActionCategory, ActionItemSource, ActionSystemData, ActionTrait, ActionTraits };

@@ -1,13 +1,13 @@
-import { CharacterPF2e } from "@actor";
-import { ActorType } from "@actor/data";
-import { ModifierPF2e, MODIFIER_TYPE, StatisticModifier } from "@actor/modifiers";
-import { AbilityString } from "@actor/types";
-import { ABILITY_ABBREVIATIONS, SKILL_ABBREVIATIONS, SKILL_EXPANDED } from "@actor/values";
+import { ActorPF2e, CharacterPF2e } from "@actor";
+import { ActorType } from "@actor/data/index.ts";
+import { ModifierPF2e } from "@actor/modifiers.ts";
+import { AbilityString } from "@actor/types.ts";
+import { ABILITY_ABBREVIATIONS, SKILL_ABBREVIATIONS, SKILL_EXPANDED } from "@actor/values.ts";
 import { ItemPF2e } from "@item";
-import { PredicatePF2e } from "@system/predication";
+import { PredicatePF2e } from "@system/predication.ts";
 import { setHasElement, sluggify } from "@util";
-import { RuleElementPF2e, RuleElementSource } from "./";
-import { RuleElementOptions } from "./base";
+import { RuleElementPF2e, RuleElementSource } from "./index.ts";
+import { RuleElementOptions } from "./base.ts";
 
 /**
  * @category RuleElement
@@ -21,7 +21,7 @@ class FixedProficiencyRuleElement extends RuleElementPF2e {
 
     private ability: AbilityString | null;
 
-    constructor(data: FixedProficiencySource, item: Embedded<ItemPF2e>, options?: RuleElementOptions) {
+    constructor(data: FixedProficiencySource, item: ItemPF2e<ActorPF2e>, options?: RuleElementOptions) {
         super(data, item, options);
 
         if (typeof data.selector === "string") {
@@ -48,7 +48,7 @@ class FixedProficiencyRuleElement extends RuleElementPF2e {
         const abilityModifier = this.ability ? this.actor.system.abilities[this.ability].mod : 0;
 
         const modifier = new ModifierPF2e({
-            type: MODIFIER_TYPE.PROFICIENCY,
+            type: "proficiency",
             slug: this.slug ?? sluggify(this.label),
             label: this.label,
             modifier: proficiencyBonus + abilityModifier,
@@ -57,7 +57,7 @@ class FixedProficiencyRuleElement extends RuleElementPF2e {
         modifiers.push(() => modifier);
     }
 
-    override afterPrepareData() {
+    override afterPrepareData(): void {
         const selector = this.resolveInjectedProperties(this.selector);
         const systemData = this.actor.system;
         const skillLongForms: Record<string, { shortform?: string } | undefined> = SKILL_EXPANDED;
@@ -72,13 +72,6 @@ class FixedProficiencyRuleElement extends RuleElementPF2e {
             const toIgnore = statistic.modifiers.filter((m) => m.type === "proficiency" && m.slug !== this.slug);
             for (const modifier of toIgnore) {
                 modifier.predicate = new PredicatePF2e(`overridden-by-${this.slug}`);
-            }
-
-            // Only AC will be a `StatisticModifier`
-            if (statistic instanceof StatisticModifier) {
-                const rollOptions = new Set(this.actor.getRollOptions(["ac", `${this.ability}-based`]));
-                statistic.calculateTotal(rollOptions);
-                statistic.value = 10 + statistic.totalModifier;
             }
         }
     }

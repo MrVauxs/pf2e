@@ -4,12 +4,11 @@ import {
     CreatureSystemData,
     CreatureSystemSource,
     CreatureTraitsData,
-    SkillAbbreviation,
-} from "@actor/creature/data";
-import { CreatureSensePF2e } from "@actor/creature/sense";
-import { Rollable } from "@actor/data/base";
-import { StatisticModifier } from "@actor/modifiers";
-import { AbilityString } from "@actor/types";
+} from "@actor/creature/data.ts";
+import { CreatureSensePF2e } from "@actor/creature/sense.ts";
+import { Rollable } from "@actor/data/base.ts";
+import { StatisticModifier } from "@actor/modifiers.ts";
+import { AbilityString } from "@actor/types.ts";
 
 type FamiliarSource = BaseCreatureSource<"familiar", FamiliarSystemSource>;
 
@@ -19,13 +18,7 @@ interface FamiliarSystemSource extends Pick<CreatureSystemSource, "schema"> {
             value: string;
         };
     };
-    attributes: {
-        hp: { value: number };
-        initiative?: never;
-        immunities?: never;
-        weaknesses?: never;
-        resistances?: never;
-    };
+    attributes: FamiliarAttributesSource;
     master: {
         id: string | null;
         ability: AbilityString | null;
@@ -50,7 +43,6 @@ interface FamiliarSystemData
     actions?: never;
     attack: StatisticModifier & Rollable;
     attributes: FamiliarAttributes;
-    skills: FamiliarSkills;
     master: {
         id: string | null;
         ability: AbilityString | null;
@@ -58,15 +50,18 @@ interface FamiliarSystemData
     traits: FamiliarTraitsData;
 }
 
-interface FamiliarAttributes extends CreatureAttributes {
-    ac: { value: number; breakdown: string; check?: number };
-    perception: FamiliarPerception;
+interface FamiliarAttributesSource {
+    hp: { value: number };
     initiative?: never;
+    immunities?: never;
+    weaknesses?: never;
+    resistances?: never;
 }
 
-type FamiliarPerception = { value: number } & StatisticModifier & Rollable;
-type FamiliarSkill = StatisticModifier & Rollable & { value: number; ability: AbilityString; visible?: boolean };
-type FamiliarSkills = Record<SkillAbbreviation, FamiliarSkill>;
+interface FamiliarAttributes extends CreatureAttributes {
+    ac: { value: number; breakdown: string; check?: number };
+    initiative?: never;
+}
 
 interface FamiliarTraitsData extends CreatureTraitsData {
     senses: CreatureSensePF2e[];
