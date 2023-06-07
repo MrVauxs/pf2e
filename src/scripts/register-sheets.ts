@@ -2,7 +2,7 @@ import { CharacterSheetPF2e } from "@actor/character/sheet";
 import { FamiliarSheetPF2e } from "@actor/familiar/sheet";
 import { HazardSheetPF2e } from "@actor/hazard/sheet";
 import { LootSheetPF2e } from "@actor/loot/sheet";
-import { NPCSheetPF2e } from "@actor/npc/sheet";
+import { NPCSheetPF2e, SimpleNPCSheet } from "@actor/npc/sheet";
 import { VehicleSheetPF2e } from "@actor/vehicle/sheet";
 import { ArmySheetPF2e } from "@actor/army/sheet";
 import { ItemSheetPF2e } from "@item";
@@ -61,6 +61,15 @@ export function registerSheets(): void {
         label: game.i18n.format(sheetLabel, { type: localizeType("npc") }),
         makeDefault: true,
     });
+
+    // Register simple NPC sheet
+    if (BUILD_MODE === "development") {
+        Actors.registerSheet("pf2e", SimpleNPCSheet, {
+            types: ["npc"],
+            label: "Simple Sheet",
+            makeDefault: false,
+        });
+    }
 
     // Register Hazard Sheet
     Actors.registerSheet("pf2e", HazardSheetPF2e, {

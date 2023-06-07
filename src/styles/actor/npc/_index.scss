@@ -74,10 +74,10 @@ $light-text: #f5efe0;
         @include scrollbar;
 
         .image-container {
-            border: 1px solid var(--color-border-dark);
             position: relative;
             img {
                 border: none;
+                border-radius: 8px
             }
             [data-action=show-image] {
                 position: absolute;
@@ -254,6 +254,15 @@ $light-text: #f5efe0;
                 text-transform: unset;
             }
         }
+
+        //Used to grey out empty values on the simple sheet
+        .value0 {
+            color: darkgrey;
+            border-bottom: 1px darkgrey solid;
+            input {
+                color: darkgrey;
+            }
+        }
     }
 
     .side-bar-section-content {
@@ -273,7 +282,7 @@ $light-text: #f5efe0;
         border-bottom: 1px solid;
         border-color: $faded-color;
         margin-top: 10px;
-        margin-bottom: 0px;
+        margin-bottom: 2px;
         align-items: baseline;
 
         .side-bar-label {
@@ -285,10 +294,13 @@ $light-text: #f5efe0;
                 font-size: 0.8rem;
             }
 
-            h4 {
+            h4, label {
                 font-size: 0.8rem;
                 margin-bottom: 0px;
                 padding-left: 2px;
+            }
+            input.modifier {
+                font-size: 0.9rem;
             }
         }
     }
